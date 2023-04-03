@@ -6,7 +6,8 @@ import (
 	controller "main/Controllers"
 	db "main/Database"
 	"net/http"
-	server "main/Server"
+	server "main/Utils"
+	namespace "main/Server"
 )
 
 func Routes() {
@@ -29,7 +30,7 @@ func Routes() {
 	http.HandleFunc("/editUser", controller.UserEditHandler)
 
 	// to call socket-io
-	server.Namespaces()
+	namespace.Namespaces()
 	go server.Server.Serve()
 	defer server.Server.Close()
 
