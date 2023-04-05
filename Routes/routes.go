@@ -29,6 +29,13 @@ func Routes() {
 	http.HandleFunc("/getUser", controller.UserGetterHandler)
 	http.HandleFunc("/editUser", controller.UserEditHandler)
 
+	// chat-room information
+	http.HandleFunc("/participants",controller.ParticipantDetails)
+	http.HandleFunc("/rooms",controller.RoomDetails)
+	http.HandleFunc("/messages",controller.MessageDetails)
+
+
+
 	// to call socket-io
 	namespace.Namespaces()
 	go server.Server.Serve()
@@ -40,10 +47,3 @@ func Routes() {
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
 
-/*
-{
-    "sender": "Alice",
-    "recipient": "Bob",
-    "text": "Hello, Bob!"
-}
-*/

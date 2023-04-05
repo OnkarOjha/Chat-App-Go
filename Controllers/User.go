@@ -1,4 +1,4 @@
-package Controller
+package Controllers
 
 import (
 	"encoding/json"
@@ -98,15 +98,16 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) {
 	user.Phone = phone
 	user.Is_active = true
 
-	// jwt authentication token
-	expirationTime := time.Now().Add(100 * time.Hour)
-	fmt.Println("expiration time is: ", expirationTime)
+	db.DB.Create(&user)
 
-	// check if the user is valid then only create token
+	// jwt authentication token
+
+	//create user claims
 	claims := models.Claims{
-		Phone: phone,
+		User_id: user.User_Id,
+		Phone:   phone,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			ExpiresAt: jwt.NewNumericDate(cons.TokenExpirationDuration),
 		},
 	}
 	fmt.Println("claims: ", claims)
@@ -119,10 +120,10 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// w.Write([]byte(fmt.Sprint("Token is:", tokenString)))
-	user.Token = tokenString
+	fmt.Println("token string :", tokenString)
 
-	db.DB.Create(&user)
+	db.DB.Model(&user).Where("user_id=?", user.User_Id).Updates(&models.User{Token: tokenString})
+
 	json.NewEncoder(w).Encode(&user)
 
 }
