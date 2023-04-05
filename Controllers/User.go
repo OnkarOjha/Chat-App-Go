@@ -5,10 +5,11 @@ import (
 	"fmt"
 	db "main/Database"
 	models "main/Models"
-	cons "main/Utils"
+	response "main/Response"
+	constants  "main/Utils"
 	"net/http"
 	"time"
-
+	"os"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/verify/v2"
@@ -16,8 +17,8 @@ import (
 
 // twilio client interface
 var client *twilio.RestClient = twilio.NewRestClientWithParams(twilio.ClientParams{
-	Username: cons.TWILIO_ACCOUNT_SID,
-	Password: cons.TWILIO_AUTH_TOKEN,
+	Username: os.Getenv("TWILIO_ACCOUNT_SID"),
+	Password: os.Getenv("TWILIO_AUTH_TOKEN"),
 })
 
 // send OTP to user
@@ -25,30 +26,57 @@ func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	EnableCors(&w)
 
-	// phone := r.FormValue("phone")
-
-	// fmt.Println("phone: ", phone)
 	var mp = make(map[string]string)
 	json.NewDecoder(r.Body).Decode(&mp)
-	fmt.Println("phone: ", mp["phone"])
-	sendOtp("+91" + mp["phone"])
+
+	// Check for number
+	var exists bool
+	err := db.DB.Raw("SELECT EXISTS(SELECT 1 FROM users WHERE phone=?)", mp["phone"]).Scan(&exists).Error
+	if err != nil {
+		panic(err)
+	}
+
+	// Response
+	if exists {
+		response.ShowResponse(
+			"Conflict",
+			409,
+			"Number already exists",
+			"",
+			w,
+		)
+		return
+	}
+	ok, sid := sendOtp("+91" + mp["phone"])
+	if ok {
+		response.ShowResponse(
+			"OK",
+			200,
+			"OTP sent successfully",
+			sid,
+			w,
+		)
+	}
 
 }
 
 // function to send OTP while user registration
-func sendOtp(to string) {
+func sendOtp(to string) (bool, *string) {
 	params := &openapi.CreateVerificationParams{}
 	params.SetTo(to)
 
 	params.SetChannel("sms")
 
-	resp, err := client.VerifyV2.CreateVerification(cons.VERIFY_SERVICE_SID, params)
+	resp, err := client.VerifyV2.CreateVerification(os.Getenv("VERIFY_SERVICE_SID"), params)
 
 	if err != nil {
 		fmt.Println(err.Error())
+		return false, nil
 	} else {
-		fmt.Printf("Sent verification '%s'\n", *resp.Sid)
+
+		return true, resp.Sid
 	}
+
 }
 
 // Check OTP status
@@ -58,13 +86,26 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 
 	var otp = make(map[string]string)
 	json.NewDecoder(r.Body).Decode(&otp)
-	fmt.Println("phone: ", otp["phone"])
-	fmt.Println("otp is:", otp["otp"])
+
 	if CheckOtp("+91"+otp["phone"], otp["otp"]) {
-		fmt.Println("Phone Number verified sucessfully")
-		UserSignupHandler(w, r, otp["phone"])
+		u := UserSignupHandler(w, r, otp["phone"])
+		response.ShowResponse(
+			"OK",
+			200,
+			"Phone Number Verified Successfully",
+			u,
+			w,
+		)
+
 	} else {
-		fmt.Println("Verifictaion failed")
+		// fmt.Println("Verifictaion failed")
+		response.ShowResponse(
+			"Not Found",
+			404,
+			"OTP expired or already verified",
+			"",
+			w,
+		)
 	}
 }
 
@@ -73,7 +114,7 @@ func CheckOtp(to string, code string) bool {
 	params := &openapi.CreateVerificationCheckParams{}
 	params.SetTo(to)
 	params.SetCode(code)
-	resp, err := client.VerifyV2.CreateVerificationCheck(cons.VERIFY_SERVICE_SID, params)
+	resp, err := client.VerifyV2.CreateVerificationCheck(os.Getenv("VERIFY_SERVICE_SID"), params)
 
 	if err != nil {
 		fmt.Println("Error is :", err)
@@ -86,7 +127,7 @@ func CheckOtp(to string, code string) bool {
 }
 
 // User Registeration
-func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) {
+func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) models.User {
 	w.Header().Set("Content-Type", "application/json")
 
 	fmt.Println("We are making user entries....")
@@ -107,24 +148,23 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) {
 		User_id: user.User_Id,
 		Phone:   phone,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(cons.TokenExpirationDuration),
+			ExpiresAt: jwt.NewNumericDate(constants.TokenExpirationDuration),
 		},
 	}
 	fmt.Println("claims: ", claims)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	fmt.Println("token: ", token)
-	tokenString, err := token.SignedString(cons.JwtKey)
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWTKEY")))
 	if err != nil {
 		fmt.Println("error is :", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
 	fmt.Println("token string :", tokenString)
 
 	db.DB.Model(&user).Where("user_id=?", user.User_Id).Updates(&models.User{Token: tokenString})
 
-	json.NewEncoder(w).Encode(&user)
+	return user
 
 }
 
@@ -152,38 +192,41 @@ func UserEditHandler(w http.ResponseWriter, r *http.Request) {
 
 	var edituser models.User
 	json.NewDecoder(r.Body).Decode(&edituser)
-	
-	// verify token
+
 	var user models.User
-	db.DB.Model(&models.User{}).Where("user_id=?",edituser.User_Id).Find(&user)
-	claims := &models.Claims{}
-	fmt.Println("user", user)
-	fmt.Println("token: ",user.Token)
-	parsedToken ,err := jwt.ParseWithClaims(user.Token ,claims, func(token *jwt.Token) (interface{}, error) {
-		if _,ok:=token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil,fmt.Errorf("error")
-		}
-		return cons.JwtKey , nil
-	})
-	if err != nil || !parsedToken.Valid {
-		http.Error(w, "Invalid or expired token", http.StatusBadRequest)
-		return
-	}
-	
+	db.DB.Model(&models.User{}).Where("user_id=?", edituser.User_Id).Find(&user)
 
 	result := db.DB.Model(&models.User{}).Where("user_id=?", edituser.User_Id).Updates(&edituser)
-	
+	var showUser models.User
+	db.DB.Raw("SELECT * from users where user_id=?", edituser.User_Id).Scan(&showUser)
+
 	if result.Error != nil {
-		fmt.Println("DB error")
+		response.ShowResponse(
+			"Internal Server Error",
+			500,
+			"DB error",
+			"",
+			w,
+		)
 		return
 	} else if result.RowsAffected == 0 {
 		db.DB.Create(&edituser)
-		fmt.Fprintf(w, "New user added")
+		response.ShowResponse(
+			"OK",
+			200,
+			"User added successfully",
+			edituser,
+			w,
+		)
 	} else {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Old user updated successfully"))
-	}
 
-	json.NewEncoder(w).Encode(&edituser)
+		response.ShowResponse(
+			"OK",
+			200,
+			"Old user updated successfully",
+			showUser,
+			w,
+		)
+	}
 
 }

@@ -14,6 +14,8 @@ func Namespaces() {
 	server.Server.OnConnect("/", chat.TokenCheck(chat.Connect))
 	server.Server.OnEvent("/","join", chat.RoomJoin)
 	server.Server.OnEvent("/","message", chat.Messages)
+	server.Server.OnEvent("/","leave", chat.RoomLeave)
+
 	
 
 	//socket server

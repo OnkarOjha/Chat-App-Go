@@ -17,6 +17,8 @@ type User struct {
 	Profile_picture string `json:"profile_picture"`
 	Is_active       bool   `json:"is_active"`
 	Bio             string `json:"bio"`
+	Is_deleted bool `json:"is_deleted"`
+
 }
 
 // Room Topic Information
@@ -36,10 +38,10 @@ type Room struct {
 	Topic_id   string `json:"topic_id"` //  hatana pdega
 	Topic_name string `json:"topic_name"`
 	User_count int    `json:"user_count"`
-	
+	Is_deleted bool `json:"is_deleted"`
 }
 
-//Message Information
+//Message InformationVerifictaion failed
 type Message struct {
 	gorm.Model
 	Message_id   string `json:"message_id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
@@ -52,10 +54,11 @@ type Message struct {
 // Participant Information
 type Participant struct {
 	gorm.Model
-	Id        string `json:"id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
+	P_Id        string `json:"id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
 	User_id   string `json:"user_id"`
 	Room_id   string `json:"room_id"`
 	Room_name string `json:"room_name"`
+	Is_deleted bool `json:"is_deleted"`
 }
 
 type Claims struct {
@@ -63,3 +66,4 @@ type Claims struct {
 	Phone string `json:"phone"`
 	jwt.RegisteredClaims
 }
+
