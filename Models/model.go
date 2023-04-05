@@ -3,6 +3,7 @@ package Models
 import (
 	"github.com/golang-jwt/jwt/v4"
 	// socketio "github.com/googollee/go-socket.io"
+	"github.com/jinzhu/gorm"
 )
 
 // User Information
@@ -27,6 +28,7 @@ type Topic struct {
 
 // Chat Room Information
 type Room struct {
+	gorm.Model
 	Room_id    string `json:"room_id" gorm:"default:uuid_generate_v4();"` //PK
 	Admin_id    string `json:"admin_id"`
 	Name       string `json:"name"`
@@ -39,6 +41,7 @@ type Room struct {
 
 //Message Information
 type Message struct {
+	gorm.Model
 	Message_id   string `json:"message_id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
 	User_id      string `json:"user_id"`
 	Room_id      string `json:"room_id"`
@@ -48,6 +51,7 @@ type Message struct {
 
 // Participant Information
 type Participant struct {
+	gorm.Model
 	Id        string `json:"id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
 	User_id   string `json:"user_id"`
 	Room_id   string `json:"room_id"`
@@ -55,6 +59,7 @@ type Participant struct {
 }
 
 type Claims struct {
+	User_id string `json:"user_id"`
 	Phone string `json:"phone"`
 	jwt.RegisteredClaims
 }
