@@ -28,7 +28,7 @@ func Routes() {
 	// http.HandleFunc("/userSignup", controller.UserSignupHandler)
 	http.HandleFunc("/getUser", controller.UserGetterHandler)
 	http.Handle("/editUser",controller.IsAuthorized(controller.UserEditHandler))
-	http.HandleFunc("/logout", controller.LogoutHandler)
+	http.Handle("/logout", controller.IsAuthorized(controller.LogoutHandler))
 	http.HandleFunc("/userRoomInfo", controller.UserRoomsDetails)
 
 

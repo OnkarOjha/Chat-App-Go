@@ -6,10 +6,12 @@ import (
 	db "main/Database"
 	models "main/Models"
 	response "main/Response"
-	constants  "main/Utils"
+	constants "main/Utils"
+	validator "main/Validation"
 	"net/http"
-	"time"
 	"os"
+	"time"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/verify/v2"
@@ -17,8 +19,8 @@ import (
 
 // twilio client interface
 var client *twilio.RestClient = twilio.NewRestClientWithParams(twilio.ClientParams{
-	Username: os.Getenv("TWILIO_ACCOUNT_SID"),
-	Password: os.Getenv("TWILIO_AUTH_TOKEN"),
+	Username: constants.TWILIO_ACCOUNT_SID,
+	Password: constants.TWILIO_AUTH_TOKEN,
 })
 
 // send OTP to user
@@ -26,12 +28,25 @@ func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	EnableCors(&w)
 
-	var mp = make(map[string]string)
+	var mp = make(map[string]interface{})
+	
 	json.NewDecoder(r.Body).Decode(&mp)
-
+	
+	// validator
+	err := validator.CheckValidation(mp["phone"])
+	if err != nil {
+		response.ShowResponse(
+			"BadRequest",
+			400,
+			"",
+			err.Error(),
+			w,
+		)
+		return
+	}
 	// Check for number
 	var exists bool
-	err := db.DB.Raw("SELECT EXISTS(SELECT 1 FROM users WHERE phone=?)", mp["phone"]).Scan(&exists).Error
+	err = db.DB.Raw("SELECT EXISTS(SELECT 1 FROM users WHERE phone=?)", mp["phone"]).Scan(&exists).Error
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +62,7 @@ func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	ok, sid := sendOtp("+91" + mp["phone"])
+	ok, sid := sendOtp("+91"+mp["phone"].(string), w)
 	if ok {
 		response.ShowResponse(
 			"OK",
@@ -61,7 +76,7 @@ func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // function to send OTP while user registration
-func sendOtp(to string) (bool, *string) {
+func sendOtp(to string, w http.ResponseWriter) (bool, *string) {
 	params := &openapi.CreateVerificationParams{}
 	params.SetTo(to)
 
@@ -70,7 +85,13 @@ func sendOtp(to string) (bool, *string) {
 	resp, err := client.VerifyV2.CreateVerification(os.Getenv("VERIFY_SERVICE_SID"), params)
 
 	if err != nil {
-		fmt.Println(err.Error())
+		response.ShowResponse(
+			"API ERROR",
+			401,
+			"No credentials provided",
+			"",
+			w,
+		)
 		return false, nil
 	} else {
 
@@ -87,7 +108,7 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	var otp = make(map[string]string)
 	json.NewDecoder(r.Body).Decode(&otp)
 
-	if CheckOtp("+91"+otp["phone"], otp["otp"]) {
+	if CheckOtp("+91"+otp["phone"], otp["otp"], w) {
 		u := UserSignupHandler(w, r, otp["phone"])
 		response.ShowResponse(
 			"OK",
@@ -102,22 +123,22 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 		response.ShowResponse(
 			"Not Found",
 			404,
-			"OTP expired or already verified",
+			"OTP ERROR",
 			"",
 			w,
 		)
+		return
 	}
 }
 
 // OTP code verification
-func CheckOtp(to string, code string) bool {
+func CheckOtp(to string, code string, w http.ResponseWriter) bool {
 	params := &openapi.CreateVerificationCheckParams{}
 	params.SetTo(to)
 	params.SetCode(code)
 	resp, err := client.VerifyV2.CreateVerificationCheck(os.Getenv("VERIFY_SERVICE_SID"), params)
 
 	if err != nil {
-		fmt.Println("Error is :", err)
 		return false
 	} else if *resp.Status == "approved" {
 		return true
@@ -138,7 +159,7 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) mod
 	user.Join_date = dateStr.Format("02 Jan 2006")
 	user.Phone = phone
 	user.Is_active = true
-
+	user.Is_verified = true
 	db.DB.Create(&user)
 
 	// jwt authentication token

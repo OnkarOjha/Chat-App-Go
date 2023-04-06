@@ -8,6 +8,7 @@ import (
 	response "main/Response"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -31,18 +32,13 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// // db mei jake us user ko dundo
-	// db.DB.Where("user_id = ?", user_id).Updates(&models.User{Is_active: false})
-
-	// End his token expiration time to time.Now()
+	// Token expiration
 	var user models.User
 
 	db.DB.Raw("SELECT * from users where user_id = ?", user_id).Scan(&user)
-	fmt.Println("user: ", user)
 	tokenstring := user.Token
-	fmt.Println("token: ", tokenstring)
-	//TODO
-	token, err := jwt.ParseWithClaims(tokenstring, &models.Claims{}, func(token *jwt.Token) (interface{}, error) {
+	claims := &models.Claims{}
+	token, err := jwt.ParseWithClaims(tokenstring, claims, func(token *jwt.Token) (interface{}, error) {
 
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("error")
@@ -53,4 +49,18 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	fmt.Println("token:", token)
+	fmt.Println("expiration time before: ", claims.RegisteredClaims.ExpiresAt)
+	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now())
+	fmt.Println("expiration time now: ", claims.RegisteredClaims.ExpiresAt)
+	fmt.Println("user_id:", user_id)
+	user.Is_active = false
+	db.DB.Model(&models.User{}).Where("user_id=?", user_id).Update("is_active", false)
+	fmt.Println("user now:", user)
+	response.ShowResponse(
+		"OK",
+		200,
+		"User successfully logged out",
+		user,
+		w,
+	)
 }

@@ -7,19 +7,25 @@ import (
 	"net/url"
 	socketio "github.com/googollee/go-socket.io"
 	server "main/Utils"
+	response "main/Response"
 )
 
 func Messages(s socketio.Conn, data map[string]interface{}) {
 	var message models.Message
-	roomName, ok1 := data["room_name"].(string)
+	roomId, ok1 := data["roomName"].(string)
 	text, ok2 := data["text"].(string)
-	fmt.Println("Message in room: ", roomName)
+	fmt.Println("Message in room: ", roomId)
 	fmt.Println("Message Text is: ", text)
 	if !ok1 || !ok2 {
 		fmt.Println("invalid data provided while joining room")
 		return
 	}
-	s.Emit("reply", "message is: "+ text)
+	// s.Emit("reply", "message is: "+ text)
+	response.SocketResponse(
+		text,
+		"Message sent in room",
+		s,
+	)
 
 	// pick the user_id from params
 	rawQuery := s.URL().RawQuery
@@ -29,7 +35,7 @@ func Messages(s socketio.Conn, data map[string]interface{}) {
 
 	// search for the room
 	var room models.Room
-	db.DB.Where("name=?", roomName).First(&room)
+	db.DB.Where("room_id=?", roomId).First(&room)
 	message.Room_id = room.Room_id
 	fmt.Println("message in room with id: ", message.Room_id)
 
@@ -38,7 +44,7 @@ func Messages(s socketio.Conn, data map[string]interface{}) {
 	fmt.Println("message content is: ", message.Text)
 	
 
-	broadcast := server.Server.BroadcastToRoom("/",roomName , "reply" , "message broadcasted is : "+ text)
+	broadcast := server.Server.BroadcastToRoom("/",roomId , "reply" , text)
 	if broadcast{
 		fmt.Println("message  broadcasted: ",text)
 	}

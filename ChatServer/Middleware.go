@@ -32,9 +32,10 @@ func TokenCheck(next func(socketio.Conn) error) func(socketio.Conn) error {
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println("dkjsnd: ",parsedToken)
 		var user model.User
 		if claims, ok := parsedToken.Claims.(*model.Claims); ok && parsedToken.Valid {
-			fmt.Println("claims: ", claims.User_id)
+			fmt.Println("claims user_id: ", claims)
 			// User details from database
 
 			db.DB.Raw("Select * from users where user_id=?", query["id"][0]).Scan(&user)
