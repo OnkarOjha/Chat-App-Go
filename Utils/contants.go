@@ -15,3 +15,4 @@ var Server = socketio.NewServer(nil)
 // token timing
 var TokenExpirationDuration = time.Now().Add( 365 * 24 * time.Hour)
 var TokenRefreshInterval = 1 * time.Minute
+
