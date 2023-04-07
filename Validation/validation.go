@@ -17,10 +17,10 @@ func CheckValidation(data interface{}) error {
 	return nil
 }
 
-// func MapValidation(mp map[string]interface{}, rules map[string]interface{}, w http.ResponseWriter) {
-// 	errs := Validate.ValidateMap(mp, rules)
-// 	if len(errs) > 0 {
-// 		response.ShowResponse("Failure", 400,"", errs, w)
-// 		return
-// 	}
-// }
+func CheckValidationStruct(data interface{}) error {
+	validationErr := Validate.Struct(data)
+	if validationErr != nil {
+		return validationErr
+	}
+	return nil
+}

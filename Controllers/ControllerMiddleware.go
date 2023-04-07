@@ -33,12 +33,13 @@ func IsAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 			if claims, ok := token.Claims.(*models.Claims); ok && token.Valid {
 				var user models.User
 				db.DB.Raw("Select * from users where user_id=?", userId).Scan(&user)
+
 				if claims.User_id == user.User_Id {
 
 					endpoint(w, r)
 				} else {
 					response.ShowResponse(
-						"Unauthorized",
+						"Failure",
 						401,
 						"Check header token or user-id provided",
 						"",
@@ -49,7 +50,7 @@ func IsAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 			} else {
 				// fmt.Println("Bad Request")
 				response.ShowResponse(
-					"Bad Request",
+					"Failure",
 					400,
 					"Check user claims",
 					"",

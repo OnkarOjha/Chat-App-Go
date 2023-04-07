@@ -8,7 +8,7 @@ import (
 	// response "main/Response"
 	"net/url"
 	"time"
-
+	response "main/Response"
 	socketio "github.com/googollee/go-socket.io"
 	"gorm.io/gorm"
 )
@@ -22,8 +22,20 @@ func RoomCreate(s socketio.Conn, data map[string]interface{}) {
 	topicName, ok2 := data["topicName"].(string)
 	fmt.Println("Room name: ", RoomName)
 	fmt.Println("Topic name: ", topicName)
-	if !ok1 || !ok2 {
-		fmt.Println("invalid data provided while joining room")
+	if RoomName == ""{
+		response.SocketResponse(
+			"Failure",
+			"Room Name must be provided",
+			s,
+		)
+		return
+	}
+	if !ok1 && !ok2 {
+		response.SocketResponse(
+			"Failure",
+			"Either Room Name or Topic Name is missing",
+			s,
+		)
 		return
 	}
 	var client models.User
@@ -48,14 +60,14 @@ func RoomCreate(s socketio.Conn, data map[string]interface{}) {
 		db.DB.Create(&room)
 
 		// check that if the user who is hitting the conn already exists in the participants table then don't update the count
-		if !CheckParticipants(client.User_Id, room.Room_id) {
+		if !CheckParticipants(client.User_Id, room.Room_id ,s) {
 			var roomcount int64
 			roomcount++
 			fmt.Println("room count: ", roomcount)
 			db.DB.Model(&room).Where("room_id=?", room.Room_id).Updates(&models.Room{User_count: roomcount})
 		}
 
-		Paricipant(query["id"][0], room.Room_id, RoomName)
+		Paricipant(query["id"][0], room.Room_id, RoomName , s)
 		CheckRoomClient(RoomName , room.Room_id)
 
 
@@ -66,10 +78,10 @@ func RoomCreate(s socketio.Conn, data map[string]interface{}) {
 		db.DB.Where("name = ?", RoomName).First(&roomParticipants)
 
 		// participant table updation
-		Paricipant(query["id"][0], roomParticipants.Room_id, RoomName)
+		Paricipant(query["id"][0], roomParticipants.Room_id, RoomName , s)
 
 		// check that if the user who is hitting the conn already exists in the participants table then don't update the count
-		if !CheckParticipants(client.User_Id, room.Room_id) {
+		if !CheckParticipants(client.User_Id, room.Room_id ,s) {
 			var roomcount int64
 			roomcount++
 			db.DB.Model(&room).Where("room_id=?", room.Room_id).Updates(&models.Room{User_count: roomcount})
@@ -84,11 +96,11 @@ func RoomCreate(s socketio.Conn, data map[string]interface{}) {
 }
 
 // Participant table updation as soon as new user joins the room
-func Paricipant(user_id string, room_id string, RoomName string) {
+func Paricipant(user_id string, room_id string, RoomName string ,  s socketio.Conn) {
 
 	var participants models.Participant
 
-	if CheckParticipants(user_id, room_id) {
+	if CheckParticipants(user_id, room_id ,s) {
 		return
 	}
 

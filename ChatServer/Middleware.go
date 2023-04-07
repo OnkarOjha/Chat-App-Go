@@ -11,6 +11,7 @@ import (
 	socketio "github.com/googollee/go-socket.io"
 )
 
+// Middleware for token verification
 func TokenCheck(next func(socketio.Conn) error) func(socketio.Conn) error {
 	return func(conn socketio.Conn) error {
 		// get token from header

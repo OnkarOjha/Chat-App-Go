@@ -5,53 +5,84 @@ import (
 	db "main/Database"
 	models "main/Models"
 	response "main/Response"
+	validation "main/Validation"
 	"net/url"
 
 	socketio "github.com/googollee/go-socket.io"
 )
-
+// Socket Instance Connection
 func Connect(s socketio.Conn) error {
-
-	// Get the user ID from the query params
 	rawQuery := s.URL().RawQuery
 	query, _ := url.ParseQuery(rawQuery)
 	fmt.Printf("Client %s Connected \n", query["id"][0])
 	return nil
 }
 
+// Room Joining Handler Function
 func RoomJoin(s socketio.Conn, data map[string]interface{}) {
-
 	fmt.Println("inside room join")
-	// Get the user ID from the query params
 	rawQuery := s.URL().RawQuery
 	query, _ := url.ParseQuery(rawQuery)
-	roomId, ok1 := data["roomId"].(string)
+	roomId, _ := data["roomId"].(string)
+	if roomId == "" {
+		response.SocketResponse(
+			"Failure",
+			"Room id not found",
+			s,
+		)
+		return
+	}
+
+	err := validation.CheckValidation(data)
+	if err != nil {
+		response.SocketResponse(
+			"Failure",
+			"Room id not found",
+			s,
+		)
+		return
+	}
 
 	fmt.Println("Room id: ", roomId)
 
-	if !ok1 {
-		fmt.Println("invalid data provided while joining room")
+	//check that room is deleted
+	var roomDeleted bool
+	db.DB.Raw("SELECT EXISTS(select * from rooms where room_id=? and is_deleted=true)",roomId).Scan(&roomDeleted)
+	if roomDeleted {
+		response.SocketResponse(
+			"Failure",
+			"Room is already deleted",
+			s,
+		)
 		return
 	}
+
 	var client models.User
 	var room models.Room
 
 	s.Join(roomId)
 
-	// s.Emit("reply", query["id"][0]+" joined successfully")
 	response.SocketResponse(
 		roomId,
 		"User Successfully joined Room "+roomId,
 		s,
 	)
 	var roomParticipants models.Room
-	db.DB.Where("room_id = ?", roomId).First(&roomParticipants)
+	err = db.DB.Where("room_id = ?", roomId).First(&roomParticipants).Error
+	if err != nil {
+		response.SocketResponse(
+			"",
+			err.Error(),
+			s,
+		)
+		return
+	}
 
 	// participant table updation
-	Paricipants(query["id"][0], roomParticipants.Room_id)
+	Paricipants(query["id"][0], roomParticipants.Room_id, s)
 
 	// check that if the user who is hitting the conn already exists in the participants table then don't update the count
-	if !CheckParticipants(client.User_Id, room.Room_id) {
+	if !CheckParticipants(client.User_Id, room.Room_id, s) {
 		var roomCounting models.Room
 		db.DB.Raw("SELECT * FROM rooms WHERE room_id =?", roomId).Scan(&roomCounting)
 		roomCounting.User_count += 1
@@ -69,11 +100,11 @@ func RoomJoin(s socketio.Conn, data map[string]interface{}) {
 }
 
 // Participant table updation as soon as new user joins the room
-func Paricipants(user_id string, roomId string) {
+func Paricipants(user_id string, roomId string, s socketio.Conn) {
 
 	var participants models.Participant
 
-	if CheckParticipants(user_id, roomId) {
+	if CheckParticipants(user_id, roomId, s) {
 		return
 	}
 
@@ -86,12 +117,17 @@ func Paricipants(user_id string, roomId string) {
 }
 
 // check that if user already exists don't create new participant entry
-func CheckParticipants(user_id string, room_id string) bool {
+func CheckParticipants(user_id string, room_id string, s socketio.Conn) bool {
 
 	var exists bool
 	err := db.DB.Raw("SELECT EXISTS(SELECT 1 FROM participants WHERE user_id = ? AND room_id = ?)", user_id, room_id).Scan(&exists).Error
 	if err != nil {
-		panic(err)
+		response.SocketResponse(
+			"Participant does not exist",
+			"Failure",
+			s,
+		)
+		return false
 	}
 
 	// Check if the participant exists
@@ -106,7 +142,7 @@ func CheckParticipants(user_id string, room_id string) bool {
 func CheckRoomClients(roomId string) {
 	var count int64
 	db.DB.Raw("SELECT COUNT(room_name) from participants where room_id = ? group by room_name;", roomId).Scan(&count)
-	count+=1
+	count += 1
 	fmt.Println("count:", count)
 	db.DB.Where("room_id=?", roomId).Updates(&models.Room{User_count: count})
 

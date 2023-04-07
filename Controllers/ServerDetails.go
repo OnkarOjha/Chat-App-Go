@@ -9,7 +9,7 @@ import (
 	response "main/Response"
 )
 
-// fetch the room participant information by room_id
+// Give me RoomId , i will give you how many users are there in the room
 func ParticipantDetails(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	EnableCors(&w)
@@ -17,10 +17,10 @@ func ParticipantDetails(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("we are fetching participant details from DB..")
 	var mp = make(map[string]interface{})
 	json.NewDecoder(r.Body).Decode(&mp)
-	room_id , ok := mp["room_id"]
+	roomId , ok := mp["roomId"]
 	if !ok{	
 		response.ShowResponse(
-			"Bad Request",
+			"Failure",
 			400,
 			"Unable to fetch room_id or invalid room_id",
 			"",
@@ -29,11 +29,24 @@ func ParticipantDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var exists bool
+	db.DB.Raw("SELECT EXISTS(select * from rooms where room_id = ? and  user_count=0)",roomId).Scan(&exists)
+	if exists{
+		response.ShowResponse(
+			"Failure",
+			400,
+			"This room does not have any participants",
+			"",
+			w,
+		)
+		return 
+	}
+
 	var participants []models.Participant
-	db.DB.Raw("select * from participants where room_id=?", room_id).Scan(&participants)
+	db.DB.Raw("select * from participants where room_id=?", roomId).Scan(&participants)
 
 	response.ShowResponse(
-		"OK",
+		"Success",
 		200,
 		"User information for this room",
 		participants,
@@ -41,7 +54,7 @@ func ParticipantDetails(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-// fetch the all the room information 
+// specifically room details dega ki admin kaun hai and user_count kya hai
 func RoomDetails(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	EnableCors(&w)
@@ -50,10 +63,20 @@ func RoomDetails(w http.ResponseWriter, r *http.Request){
 
 	var mp = make(map[string]interface{})
 	json.NewDecoder(r.Body).Decode(&mp)
-	room_id,ok := mp["room_id"]
+	roomId,ok := mp["roomId"]
+	if roomId == ""{
+		response.ShowResponse(
+			"Failure",
+			404,
+			"Room Id not found",
+			"",
+			w,
+		)
+		return
+	}
 	if !ok{
 		response.ShowResponse(
-			"Bad Request",
+			"Failure",
 			400,
 			"Unable to fetch room_id or invalid room_id",
 			"",
@@ -63,11 +86,34 @@ func RoomDetails(w http.ResponseWriter, r *http.Request){
 	}
 
 	var rooms []models.Room
-	db.DB.Raw("Select * from rooms where room_id =?", room_id).Scan(&rooms)
+	fmt.Println("roomidd: ",roomId)
+	var exists bool
+	db.DB.Raw("SELECT EXISTS(SELECT * FROM rooms where room_id =?)",roomId).Scan(&exists)
+	if !exists{
+		response.ShowResponse(
+			"Failure",
+			500,
+			"Record not found in DB",
+			"",
+			w,
+		)
+		return
+	}
+	err := db.DB.Raw("Select * from rooms where room_id =?", roomId).Scan(&rooms).Error
+	if err!=nil{
+		response.ShowResponse(
+			"Failure",
+			500,
+			"Record not found in DB",
+			err.Error(),
+			w,
+		)
+		return
+	}
 
 	
 	response.ShowResponse(
-		"OK",
+		"Success",
 		200,
 		"Room Details",
 		rooms,
@@ -81,10 +127,20 @@ func MessageDetails(w http.ResponseWriter , r *http.Request){
 	EnableCors(&w)
 	var mp = make(map[string]interface{})
 	json.NewDecoder(r.Body).Decode(&mp)
-	room_id,ok := mp["room_id"]
+	roomId,ok := mp["roomId"]
+	if roomId == ""{
+		response.ShowResponse(
+			"Failure",
+			404,
+			"Room Id not found",
+			"",
+			w,
+		)
+		return
+	}
 	if !ok{
 		response.ShowResponse(
-			"Bad Request",
+			"Failure",
 			400,
 			"Unable to fetch room_id or invalid room_id",
 			"",
@@ -93,12 +149,25 @@ func MessageDetails(w http.ResponseWriter , r *http.Request){
 		return
 	}
 
+	var exists bool
+	db.DB.Raw("SELECT EXISTS(SELECT * FROM rooms where room_id =?)",roomId).Scan(&exists)
+	if !exists{
+		response.ShowResponse(
+			"Failure",
+			500,
+			"Record not found in DB",
+			"",
+			w,
+		)
+		return
+	}
+
 	var messages []models.Message
 
-	db.DB.Raw("SELECT * FROM messages where room_id=? ORDER BY created_at  DESC LIMIT 10",room_id).Scan(&messages)
+	db.DB.Raw("SELECT * FROM messages where room_id=? ORDER BY created_at  DESC LIMIT 10",roomId).Scan(&messages)
 
 	response.ShowResponse(
-		"OK",
+		"Success",
 		200,
 		"All the messages in this room have been shown below",
 		messages,
@@ -113,10 +182,20 @@ func UserRoomsDetails(w http.ResponseWriter, r *http.Request){
 
 	var mp = make(map[string]interface{})
 	json.NewDecoder(r.Body).Decode(&mp)
-	user_id , ok := mp["user_id"]
+	userId , ok := mp["userId"]
+	if userId == ""{
+		response.ShowResponse(
+			"Failure",
+			404,
+			"Room Id not found",
+			"",
+			w,
+		)
+		return
+	}
 	if !ok{
 		response.ShowResponse(
-			"Bad Request",
+			"Failure",
 			400,
 			"Unable to fetch user_id or invalid user_id",
 			"",
@@ -127,10 +206,25 @@ func UserRoomsDetails(w http.ResponseWriter, r *http.Request){
 
 	var userRoomInformation []models.Participant	
 
-	db.DB.Raw("select * from participants where user_id = ?",user_id).Scan(&userRoomInformation)
+	var exists bool
+	db.DB.Raw("SELECT EXISTS(select * from participants where user_id = ?)",userId).Scan(&exists)
+	if exists {
+		response.ShowResponse(
+			"Failure",
+			400,
+			"User is alredy logged out",
+			"",
+			w,
+
+
+		)
+		return
+	}
+
+	db.DB.Raw("select * from participants where user_id = ?",userId).Scan(&userRoomInformation)
 
 	response.ShowResponse(
-		"OK",
+		"Success",
 		200,
 		"User has access to following rooms",
 		userRoomInformation,

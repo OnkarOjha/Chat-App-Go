@@ -13,8 +13,8 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("logout handler")
+func DeleteAccount(w http.ResponseWriter, r *http.Request) {
+
 	w.Header().Set("Content-Type", "application/json")
 	EnableCors(&w)
 	var mp = make(map[string]interface{})
@@ -87,12 +87,13 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("expiration time now: ", claims.RegisteredClaims.ExpiresAt)
 	fmt.Println("user_id:", userId)
 	user.Is_active = false
-	db.DB.Model(&models.User{}).Where("user_id=?", userId).Update("is_active", false)
+	//delete user from DB
+	db.DB.Model(&models.User{}).Where("user_id=?", userId).Delete(&user)
 	fmt.Println("user now:", user)
 	response.ShowResponse(
 		"Success",
 		200,
-		"User successfully logged out",
+		"User Account successfully Deleted",
 		user,
 		w,
 	)

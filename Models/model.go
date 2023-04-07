@@ -12,7 +12,7 @@ type User struct {
 	Token           string `json:"token"`
 	User_Id         string `json:"userId" gorm:"default:uuid_generate_v4();"` //PK
 	Name            string `json:"name" validate:"required"`
-	Phone           string `json:"phone" validate:"required,e164"`
+	Phone           string `json:"phone" `
 	Email           string `json:"email" validate:"required,email"`
 	Join_date       string `json:"joinDate"`
 	Profile_picture string `json:"profilePicture"`
@@ -59,7 +59,7 @@ type Participant struct {
 	User_id    string `json:"userId"`
 	Room_id    string `json:"roomId"`
 	Room_name  string `json:"roomName"`
-	Is_deleted bool   `json:"isDeleted"`
+	Has_left bool   `json:"hasLeft"`
 }
 
 type Claims struct {
