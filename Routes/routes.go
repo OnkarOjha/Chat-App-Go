@@ -27,12 +27,24 @@ func Routes() {
 	http.HandleFunc("/verifyOtp", controller.VerifyOTPHandler)
 	// http.HandleFunc("/userSignup", controller.UserSignupHandler)
 	http.HandleFunc("/getUser", controller.UserGetterHandler)
-	http.HandleFunc("/editUser", controller.UserEditHandler)
+	http.Handle("/editUser",controller.IsAuthorized(controller.UserEditHandler))
+	http.Handle("/logout", controller.IsAuthorized(controller.LogoutHandler))
+	http.Handle("/deleteAccount", controller.IsAuthorized(controller.DeleteAccount))
+	http.HandleFunc("/userRoomInfo", controller.UserRoomsDetails)
 
-	// chat-room information
+
+
+	
+
+	// chat-room functions
 	http.HandleFunc("/participants",controller.ParticipantDetails)
 	http.HandleFunc("/rooms",controller.RoomDetails)
 	http.HandleFunc("/messages",controller.MessageDetails)
+	http.HandleFunc("/roomDelete",controller.RoomDelete)
+	http.HandleFunc("/messageSearch",controller.MessageSearchController)
+
+
+
 
 
 

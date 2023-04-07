@@ -3,7 +3,7 @@ package Database
 import (
 	"fmt"
 	models "main/Models"
-	constant "main/Utils"
+	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -13,7 +13,7 @@ var DB *gorm.DB
 
 func Connect() error {
 	fmt.Println("Connecting to database...")
-	dsn := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable", constant.Host, constant.Port, constant.User, constant.Password, constant.Dbname)
+	dsn := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable", os.Getenv("HOST"), os.Getenv("PORT"), os.Getenv("DBUSER"), os.Getenv("PASSWORD"), os.Getenv("DBNAME"))
 	db, err := gorm.Open(postgres.Open(dsn))
 	if err != nil {
 		fmt.Println("Error connecting to database")

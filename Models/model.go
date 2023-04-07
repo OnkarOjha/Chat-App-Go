@@ -4,62 +4,66 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	// socketio "github.com/googollee/go-socket.io"
 	"github.com/jinzhu/gorm"
+	
 )
 
 // User Information
 type User struct {
 	Token           string `json:"token"`
-	User_Id         string `json:"user_id" gorm:"default:uuid_generate_v4();"` //PK
-	Name            string `json:"name"`
-	Phone           string `json:"phone"`
-	Email           string `json:"email"`
-	Join_date       string `json:"join_date"`
-	Profile_picture string `json:"profile_picture"`
-	Is_active       bool   `json:"is_active"`
-	Bio             string `json:"bio"`
+	User_Id         string `json:"userId" gorm:"default:uuid_generate_v4();"` //PK
+	Name            string `json:"name" validate:"required"`
+	Phone           string `json:"phone" `
+	Email           string `json:"email" validate:"required,email"`
+	Join_date       string `json:"joinDate"`
+	Profile_picture string `json:"profilePicture"`
+	Is_active       bool   `json:"isActive"`
+	Bio             string `json:"bio" validate:"required"`
+	Is_deleted      bool   `json:"isDeleted"`
+	Is_verified     bool   `json:"isVerified"`
 }
 
 // Room Topic Information
 type Topic struct {
-	Topic_id    string `json:"topic_id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Topic_id    string `json:"topicId" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description" validate:"required"`
 }
 
 // Chat Room Information
 type Room struct {
 	gorm.Model
-	Room_id    string `json:"room_id" gorm:"default:uuid_generate_v4();"` //PK
-	Admin_id    string `json:"admin_id"`
-	Name       string `json:"name"`
-	Created_at string `json:"created_at"`
-	Topic_id   string `json:"topic_id"` //  hatana pdega
-	Topic_name string `json:"topic_name"`
-	User_count int    `json:"user_count"`
-	
+	Room_id    string `json:"roomId" gorm:"default:uuid_generate_v4();"` //PK
+	Admin_id   string `json:"adminId"`
+	Name       string `json:"name" validate:"required"`
+	Created_at string `json:"createdAt"`
+	Topic_id   string `json:"topicId"` //  hatana pdega
+	Topic_name string `json:"topicName" validate:"required"`
+	User_count int64    `json:"userCount"`
+	Is_deleted bool   `json:"isDeleted"`
 }
 
-//Message Information
+//Message InformationVerifictaion failed
 type Message struct {
 	gorm.Model
-	Message_id   string `json:"message_id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
-	User_id      string `json:"user_id"`
-	Room_id      string `json:"room_id"`
-	Text         string `json:"text"`
-	Message_type string `json:"message_type"`
+	Message_id   string `json:"messageId" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
+	User_id      string `json:"userId"`
+	Room_id      string `json:"roomId"`
+	Text         string `json:"text" validate:"required"`
+	Message_type string `json:"messageType"`
 }
 
 // Participant Information
 type Participant struct {
 	gorm.Model
-	Id        string `json:"id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
-	User_id   string `json:"user_id"`
-	Room_id   string `json:"room_id"`
-	Room_name string `json:"room_name"`
+	P_Id       string `json:"id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
+	User_id    string `json:"userId"`
+	Room_id    string `json:"roomId"`
+	Room_name  string `json:"roomName"`
+	Has_left bool   `json:"hasLeft"`
 }
 
 type Claims struct {
-	User_id string `json:"user_id"`
-	Phone string `json:"phone"`
+	User_id string `json:"userId"`
+	Phone   string `json:"phone"`
 	jwt.RegisteredClaims
 }
