@@ -7,10 +7,6 @@ import (
 	models "main/Models"
 	response "main/Response"
 	"net/http"
-	"os"
-	"time"
-
-	"github.com/golang-jwt/jwt/v4"
 )
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +17,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&mp)
 	userId, ok := mp["userId"]
 	fmt.Println("You are Logging out user :", userId)
-	if mp["userId"] == nil{
+	if mp["userId"] == nil {
 		response.ShowResponse(
 			"Failure",
 			400,
@@ -46,8 +42,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	var exists bool
-	db.DB.Raw("SELECT EXISTS(select * from users where user_id=?)",userId).Scan(&exists)
-	if !exists{
+	db.DB.Raw("SELECT EXISTS(select * from users where user_id=?)", userId).Scan(&exists)
+	if !exists {
 		response.ShowResponse(
 			"Failure",
 			400,
@@ -58,8 +54,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err:=db.DB.Raw("SELECT * from users where user_id = ?", userId).Scan(&user).Error
-	if err!=nil{
+	err := db.DB.Raw("SELECT * from users where user_id = ?", userId).Scan(&user).Error
+	if err != nil {
 		response.ShowResponse(
 			"Failure",
 			500,
@@ -69,31 +65,18 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	tokenstring := user.Token
-	claims := &models.Claims{}
-	token, err := jwt.ParseWithClaims(tokenstring, claims, func(token *jwt.Token) (interface{}, error) {
-
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("error")
-		}
-		return []byte(os.Getenv("JWTKEY")), nil
-	})
-	if err != nil {
-		panic(err)
+	if user.Is_active == true {
+		
+		user.Is_active = false
+		db.DB.Model(&models.User{}).Where("user_id=?", userId).Update("is_active", false)
+		db.DB.Model(&models.User{}).Where("user_id=?", userId).Update("token" , nil)
+		fmt.Println("user now:", user)
+		response.ShowResponse(
+			"Success",
+			200,
+			"User successfully logged out",
+			user,
+			w,
+		)
 	}
-	fmt.Println("token:", token)
-	fmt.Println("expiration time before: ", claims.RegisteredClaims.ExpiresAt)
-	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now())
-	fmt.Println("expiration time now: ", claims.RegisteredClaims.ExpiresAt)
-	fmt.Println("user_id:", userId)
-	user.Is_active = false
-	db.DB.Model(&models.User{}).Where("user_id=?", userId).Update("is_active", false)
-	fmt.Println("user now:", user)
-	response.ShowResponse(
-		"Success",
-		200,
-		"User successfully logged out",
-		user,
-		w,
-	)
 }
