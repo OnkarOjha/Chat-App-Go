@@ -58,4 +58,3 @@ func Routes() {
 
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
-

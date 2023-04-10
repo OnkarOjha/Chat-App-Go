@@ -22,6 +22,8 @@ func ShowResponse(status string, statusCode int64, message string, data interfac
 	json.NewEncoder(w).Encode(&response)
 }
 
+
+
 func SocketResponse(data interface{}, message string, s socketio.Conn) {
 	socketResponse := Socket{
 		Message: message,
@@ -30,4 +32,7 @@ func SocketResponse(data interface{}, message string, s socketio.Conn) {
 	s.Emit("reply", socketResponse, func() {
 		fmt.Println("acknowledgement sent to client")
 	})
+
 }
+
+

@@ -62,6 +62,12 @@ type Participant struct {
 	Has_left bool   `json:"hasLeft"`
 }
 
+// Blacklisted Tokens
+type BlacklistedTokens struct {
+	gorm.Model
+	Token string `json:"token"`
+}
+
 type Claims struct {
 	User_id string `json:"userId"`
 	Phone   string `json:"phone"`

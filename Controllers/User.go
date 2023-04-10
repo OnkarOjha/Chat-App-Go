@@ -11,8 +11,8 @@ import (
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/golang-jwt/jwt/v4"
+	commonFunctions "main/Utils"
+	
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/verify/v2"
 )
@@ -30,8 +30,8 @@ func TwilioInit(password string)  {
 
 // send OTP to user
 func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	EnableCors(&w)
+	commonFunctions.SetHeader(w)
+	commonFunctions.EnableCors(&w)
 
 	var mp = make(map[string]interface{})
 
@@ -128,8 +128,8 @@ func sendOtp(to string, w http.ResponseWriter) (bool, *string) {
 
 // Check OTP status
 func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	EnableCors(&w)
+	commonFunctions.SetHeader(w)
+	commonFunctions.EnableCors(&w)
 
 	var otp = make(map[string]interface{})
 	json.NewDecoder(r.Body).Decode(&otp)
@@ -202,8 +202,7 @@ func CheckOtp(to string, code string, w http.ResponseWriter) bool {
 
 // User Registeration
 func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) models.User {
-	w.Header().Set("Content-Type", "application/json")
-
+	commonFunctions.SetHeader(w)
 	fmt.Println("We are making user entries....")
 	var user models.User
 	json.NewDecoder(r.Body).Decode(&user)
@@ -215,15 +214,15 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) mod
 	if userexists {
 			
 		var user1 models.User
-		db.DB.Raw("select * from users where phone=?",phone).Scan(&user1)
+		
 		
 		// JWT token authentication
-		TokenString := GenerateJwtToken(user1,phone,w)
+		TokenString := commonFunctions.GenerateJwtToken(user1,phone,w)
 
 		// Updation in DB
 		db.DB.Model(&models.User{}).Where("phone=?",phone).Update("token" , TokenString)
 		db.DB.Model(&models.User{}).Where("phone=?",phone).Update("is_active" , true)
-
+		db.DB.Raw("select * from users where phone=?",phone).Scan(&user1)
 		return user1
 
 	}
@@ -237,7 +236,7 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) mod
 
 	// jwt authentication token
 
-	TokenString := GenerateJwtToken(user , phone , w)
+	TokenString := commonFunctions.GenerateJwtToken(user , phone , w)
 
 	db.DB.Model(&user).Where("user_id=?", user.User_Id).Updates(&models.User{Token: TokenString})
 
@@ -246,7 +245,7 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) mod
 }
 
 func UserGetterHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	commonFunctions.SetHeader(w)
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -260,6 +259,11 @@ func UserGetterHandler(w http.ResponseWriter, r *http.Request) {
 
 // user details edit
 func UserEditHandler(w http.ResponseWriter, r *http.Request) {
+	
+	mpData := r.Context().Value("editUser")
+	
+	userEditDetails := mpData.(map[string]interface{})
+	fmt.Printf("Data from context: %v\n", userEditDetails["userId"])
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -268,9 +272,9 @@ func UserEditHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("You are editing user information.....")
 
 	var edituser models.User
-	json.NewDecoder(r.Body).Decode(&edituser)
+	
 
-	err := validator.CheckValidationStruct(edituser)
+	err := validator.CheckValidationStruct(userEditDetails)
 	if err != nil {
 		response.ShowResponse(
 			"Failure",
@@ -283,11 +287,14 @@ func UserEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
-	db.DB.Model(&models.User{}).Where("user_id=?", edituser.User_Id).Find(&user)
-
-	result := db.DB.Model(&models.User{}).Where("user_id=?", edituser.User_Id).Updates(&edituser)
+	db.DB.Model(&models.User{}).Where("user_id=?",userEditDetails["userId"]).Find(&user)
+	UserBio := userEditDetails["bio"]
+	UserEmail := userEditDetails["email"]
+	UserName := userEditDetails["name"]
+	UserProfilePicture := userEditDetails["profilePicture"]
+	result := db.DB.Model(&models.User{}).Where("user_id=?", userEditDetails["userId"]).Updates(&models.User{Bio: UserBio.(string) ,Email: UserEmail.(string) , Name: UserName.(string) , Profile_picture: UserProfilePicture.(string) })
 	var showUser models.User
-	db.DB.Raw("SELECT * from users where user_id=?", edituser.User_Id).Scan(&showUser)
+	db.DB.Raw("SELECT * from users where user_id=?", userEditDetails["userId"]).Scan(&showUser)
 
 	if result.Error != nil {
 		response.ShowResponse(
@@ -320,25 +327,4 @@ func UserEditHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func GenerateJwtToken(user models.User , phone string , w http.ResponseWriter) string {
-	//create user claims
-	claims := models.Claims{
-		User_id: user.User_Id,
-		Phone:   phone,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(constants.TokenExpirationDuration),
-		},
-	}
-	fmt.Println("claims: ", claims)
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	fmt.Println("token: ", token)
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWTKEY")))
-	if err != nil {
-		fmt.Println("error is :", err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	fmt.Println("new token string :", tokenString)
-
-	return tokenString
-}

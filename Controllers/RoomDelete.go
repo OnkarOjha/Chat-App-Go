@@ -7,13 +7,14 @@ import (
 	"net/http"
 	db "main/Database"
 	response "main/Response"
+	commonFunctions "main/Utils"
 )
 
 func RoomDelete(w http.ResponseWriter, r *http.Request) {
 	// only that person who is the admin can delete the room
 	// var room models.Room
 	w.Header().Set("Content-Type", "application/json")
-	EnableCors(&w)
+	commonFunctions.EnableCors(&w)
 	fmt.Println("We are deleting the room")
 	var mp = make(map[string]string)
 	json.NewDecoder(r.Body).Decode(&mp)

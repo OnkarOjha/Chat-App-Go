@@ -7,12 +7,13 @@ import (
 	models "main/Models"
 	"net/http"
 	response "main/Response"
+	commonFunctions "main/Utils"
 )
 
 // Give me RoomId , i will give you how many users are there in the room
 func ParticipantDetails(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	EnableCors(&w)
+	commonFunctions.SetHeader(w)
+	commonFunctions.EnableCors(&w)
 
 	fmt.Println("we are fetching participant details from DB..")
 	var mp = make(map[string]interface{})
@@ -56,8 +57,8 @@ func ParticipantDetails(w http.ResponseWriter, r *http.Request) {
 
 // specifically room details dega ki admin kaun hai and user_count kya hai
 func RoomDetails(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Content-Type", "application/json")
-	EnableCors(&w)
+	commonFunctions.SetHeader(w)
+	commonFunctions.EnableCors(&w)
 
 	fmt.Println("We are fetching room details from DB...")
 
@@ -124,7 +125,7 @@ func RoomDetails(w http.ResponseWriter, r *http.Request){
 //fetch all the message from DB with limit
 func MessageDetails(w http.ResponseWriter , r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
-	EnableCors(&w)
+	commonFunctions.EnableCors(&w)
 	var mp = make(map[string]interface{})
 	json.NewDecoder(r.Body).Decode(&mp)
 	roomId,ok := mp["roomId"]
@@ -178,7 +179,7 @@ func MessageDetails(w http.ResponseWriter , r *http.Request){
 //Handler to fetch all the details of the user provided that in which room it is present
 func UserRoomsDetails(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
-	EnableCors(&w)
+	commonFunctions.EnableCors(&w)
 
 	var mp = make(map[string]interface{})
 	json.NewDecoder(r.Body).Decode(&mp)
@@ -208,7 +209,7 @@ func UserRoomsDetails(w http.ResponseWriter, r *http.Request){
 
 	var exists bool
 	db.DB.Raw("SELECT EXISTS(select * from participants where user_id = ?)",userId).Scan(&exists)
-	if exists {
+	if !exists {
 		response.ShowResponse(
 			"Failure",
 			400,
