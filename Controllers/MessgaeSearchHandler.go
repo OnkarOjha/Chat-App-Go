@@ -6,21 +6,23 @@ import (
 	db "main/Database"
 	models "main/Models"
 	response "main/Response"
+	commonFunctions "main/Utils"
 	validator "main/Validation"
 	"net/http"
 )
 
 // Message Searching API
 func MessageSearchController(w http.ResponseWriter, r *http.Request) {
-	
+
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	EnableCors(&w)
+	commonFunctions.EnableCors(&w)
 
 	var mp = make(map[string]interface{})
 
 	json.NewDecoder(r.Body).Decode(&mp)
 	roomId := mp["roomId"]
 	search := mp["search"]
+
 	if roomId == nil {
 		response.ShowResponse(
 			"Failure",
@@ -59,12 +61,13 @@ func MessageSearchController(w http.ResponseWriter, r *http.Request) {
 
 	var messages []models.Message
 	var messageTextExist bool
-	query1 := "SELECT EXISTS(select * from messages where text LIKE '%" + search.(string) + "%')"
+
+	query1 := "SELECT EXISTS(select * from messages where LOWER(text) LIKE LOWER('%\\" + search.(string) + "%'))"
 
 	db.DB.Raw(query1).Scan(&messageTextExist)
 	fmt.Println("message test exists:", messageTextExist)
-	if messageTextExist{
-		query2 := "select * from messages where room_id='"+ roomId.(string) +"' and text LIKE '%" + search.(string) + "%'"
+	if messageTextExist {
+		query2 := "select * from messages where room_id='" + roomId.(string) + "' and LOWER(text) LIKE LOWER('%\\" + search.(string) + "%')"
 		db.DB.Raw(query2).Scan(&messages)
 		response.ShowResponse(
 			"Success",
@@ -74,7 +77,7 @@ func MessageSearchController(w http.ResponseWriter, r *http.Request) {
 			w,
 		)
 		return
-	}else{
+	} else {
 		response.ShowResponse(
 			"Failure",
 			400,

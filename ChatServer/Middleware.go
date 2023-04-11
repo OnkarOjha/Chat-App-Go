@@ -6,7 +6,7 @@ import (
 	model "main/Models"
 	"net/url"
 	"os"
-
+	commonFunctions "main/Utils"
 	"github.com/golang-jwt/jwt/v4"
 	socketio "github.com/googollee/go-socket.io"
 )
@@ -21,6 +21,11 @@ func TokenCheck(next func(socketio.Conn) error) func(socketio.Conn) error {
 		// get user_id from params
 		rawQuery := conn.URL().RawQuery
 		query, _ := url.ParseQuery(rawQuery)
+
+		if commonFunctions.BlacklistTokenHandler(httpheader["Token"][0]){
+			fmt.Println("token is blacklisted")
+			conn.Close()
+		}
 
 		// middleware logic
 		parsedToken, err := jwt.ParseWithClaims(httpheader["Token"][0], &model.Claims{}, func(token *jwt.Token) (interface{}, error) {

@@ -1,4 +1,4 @@
-package Constants
+package Utils
 
 import (
 	"time"

@@ -22,7 +22,7 @@ func Connect() error {
 
 	db.Exec("CREATE SCHEMA IF NOT EXISTS public")
 	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
-	db.AutoMigrate(&models.User{}, &models.Topic{}, &models.Room{}, &models.Participant{}, &models.Message{})
+	db.AutoMigrate(&models.User{}, &models.Topic{}, &models.Room{}, &models.Participant{}, &models.Message{} , &models.BlacklistedTokens{})
 	DB = db
 	fmt.Println("Successfully Connected to database")
 	return nil
