@@ -17,8 +17,18 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	commonFunctions.EnableCors(&w)
 
-	token := r.Header["Token"]
-	fmt.Println("token : ", token[0])
+	cookie, err := r.Cookie("cookie")
+	if err!=nil{
+		response.ShowResponse(
+			"Failure",
+			403,
+			"Error fetching cookie",
+			err.Error(),
+			w,
+		)
+		return
+	}
+	fmt.Println("token : ", cookie.Value)
 	fmt.Println("You are Logging out user :",userDetails["userId"])
 
 
@@ -37,7 +47,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := db.DB.Raw("SELECT * from users where user_id = ?", userDetails["userId"]).Scan(&user).Error
+	err = db.DB.Raw("SELECT * from users where user_id = ?", userDetails["userId"]).Scan(&user).Error
 	if err != nil {
 		response.ShowResponse(
 			"Failure",
@@ -51,11 +61,14 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if user.Is_active == true {
 		// store the token in blacklisted table
 		var blackListedToken models.BlacklistedTokens
-		blackListedToken.Token = token[0]
+		blackListedToken.Token = cookie.Value
 		db.DB.Create(&blackListedToken)
 		user.Is_active = false
 		db.DB.Model(&models.User{}).Where("user_id=?", userDetails["userId"]).Update("is_active", false)
 		db.DB.Model(&models.User{}).Where("user_id=?", userDetails["userId"]).Update("token" , nil)
+		//delete cookie when user logout
+		commonFunctions.DeleteCookie(w,r,cookie)
+
 		fmt.Println("user now:", user)
 		response.ShowResponse(
 			"Success",

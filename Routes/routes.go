@@ -8,11 +8,14 @@ import (
 	"net/http"
 	server "main/Utils"
 	namespace "main/Server"
+	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
+	
 )
 
 func Routes() {
 	fmt.Println("Listening on port 8000")
-
+	mux := mux.NewRouter()
 	err := db.Connect()
 	if err != nil {
 		panic(err)
@@ -25,7 +28,6 @@ func Routes() {
 	//user end-points
 	http.HandleFunc("/sendOtp", controller.SendOtpHandler)
 	http.HandleFunc("/verifyOtp", controller.VerifyOTPHandler)
-	// http.HandleFunc("/userSignup", controller.UserSignupHandler)
 	http.HandleFunc("/getUser", controller.UserGetterHandler)
 	http.Handle("/editUser",controller.IsAuthorized(controller.UserEditHandler))
 	http.Handle("/logout", controller.IsAuthorized(controller.LogoutHandler))
@@ -44,7 +46,7 @@ func Routes() {
 	http.HandleFunc("/messageSearch",controller.MessageSearchController)
 
 
-
+	mux.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 
 

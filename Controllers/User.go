@@ -215,9 +215,13 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) mod
 			
 		var user1 models.User
 		
-		
+		db.DB.Raw("select * from users where phone=?",phone).Scan(&user1)
 		// JWT token authentication
 		TokenString := commonFunctions.GenerateJwtToken(user1,phone,w)
+
+
+		//set cookie
+		constants.SetCookie(w,r,TokenString)
 
 		// Updation in DB
 		db.DB.Model(&models.User{}).Where("phone=?",phone).Update("token" , TokenString)
@@ -237,6 +241,9 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) mod
 	// jwt authentication token
 
 	TokenString := commonFunctions.GenerateJwtToken(user , phone , w)
+
+	//set cookies
+	constants.SetCookie(w,r,TokenString)
 
 	db.DB.Model(&user).Where("user_id=?", user.User_Id).Updates(&models.User{Token: TokenString})
 

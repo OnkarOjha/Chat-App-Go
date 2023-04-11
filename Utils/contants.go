@@ -13,6 +13,7 @@ const VERIFY_SERVICE_SID string = "VA6602f8535f8f1369b0ed68eed5d6af67"
 var Server = socketio.NewServer(nil)
 
 // token timing
-var TokenExpirationDuration = time.Now().Add( 365 * 24 * time.Hour)
-var TokenRefreshInterval = 1 * time.Minute
+var TokenExpirationDuration = time.Now().Add(7 * 24 * time.Hour)
+var TokenCheckTimer = 2 * time.Minute
+var CookieExpirationTime = time.Now().Add(7 * 24 * time.Hour)
 
