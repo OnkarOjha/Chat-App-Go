@@ -10,8 +10,10 @@ import (
 
 	socketio "github.com/googollee/go-socket.io"
 )
+
 // Socket Instance Connection
 func Connect(s socketio.Conn) error {
+
 	rawQuery := s.URL().RawQuery
 	query, _ := url.ParseQuery(rawQuery)
 	fmt.Printf("Client %s Connected \n", query["id"][0])
@@ -47,7 +49,7 @@ func RoomJoin(s socketio.Conn, data map[string]interface{}) {
 
 	//check that room is deleted
 	var roomDeleted bool
-	db.DB.Raw("SELECT EXISTS(select * from rooms where room_id=? and is_deleted=true)",roomId).Scan(&roomDeleted)
+	db.DB.Raw("SELECT EXISTS(select * from rooms where room_id=? and is_deleted=true)", roomId).Scan(&roomDeleted)
 	if roomDeleted {
 		response.SocketResponse(
 			"Failure",

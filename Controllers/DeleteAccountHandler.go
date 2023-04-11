@@ -17,7 +17,17 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	commonFunctions.EnableCors(&w)
 
-	token := r.Header["Token"]
+	cookie, err := r.Cookie("cookie")
+	if err!=nil{
+		response.ShowResponse(
+			"Failure",
+			403,
+			"Error fetching cookie",
+			err.Error(),
+			w,
+		)
+		return
+	}
 	fmt.Println("You are Logging out user :", userDetails["userId"])
 
 	// Token expiration
@@ -36,7 +46,7 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := db.DB.Raw("SELECT * from users where user_id = ?", userDetails["userId"]).Scan(&user).Error
+	err = db.DB.Raw("SELECT * from users where user_id = ?", userDetails["userId"]).Scan(&user).Error
 	if err != nil {
 		response.ShowResponse(
 			"Failure",
@@ -50,10 +60,14 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	if user.Is_active == true {
 		// store the token in blacklisted table
 		var blackListedToken models.BlacklistedTokens
-		blackListedToken.Token = token[0]
+		blackListedToken.Token = cookie.Value
 		db.DB.Create(&blackListedToken)
 		//delete user from DB
 		db.DB.Model(&models.User{}).Where("user_id=?", userDetails["userId"]).Delete(&user)
+
+		//delete cookie when user logout
+		commonFunctions.DeleteCookie(w,r,cookie)
+		
 		fmt.Println("user now:", user)
 		response.ShowResponse(
 			"Success",

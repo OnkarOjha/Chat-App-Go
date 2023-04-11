@@ -1,13 +1,15 @@
 package Utils
 
 import (
-	db "main/Database"
-	"net/http"
-	"github.com/golang-jwt/jwt/v4"
-	models "main/Models"
 	"fmt"
+	db "main/Database"
+	models "main/Models"
+	response "main/Response"
+	"net/http"
 	"os"
-	
+	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func BlacklistTokenHandler(token string) bool {
@@ -24,7 +26,7 @@ func SetHeader(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 }
 
-func GenerateJwtToken(user models.User , phone string , w http.ResponseWriter) string {
+func GenerateJwtToken(user models.User, phone string, w http.ResponseWriter) string {
 	//create user claims
 	claims := models.Claims{
 		User_id: user.User_Id,
@@ -45,4 +47,54 @@ func GenerateJwtToken(user models.User , phone string , w http.ResponseWriter) s
 	fmt.Println("new token string :", tokenString)
 
 	return tokenString
+}
+
+func DecodeToken(tokenString string) (models.Claims, error) {
+	claims := &models.Claims{}
+
+	parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("error")
+		}
+		return []byte(os.Getenv("JWTKEY")), nil
+	})
+
+	if err != nil || !parsedToken.Valid {
+		return *claims, fmt.Errorf("invalid or expired token")
+	}
+
+	return *claims, nil
+}
+
+//Set cookie handler
+func SetCookie(w http.ResponseWriter, r *http.Request, tokenString string) {
+	cookie := http.Cookie{
+		Name:    "cookie",
+		Value:   tokenString,
+		Expires: CookieExpirationTime,
+	}
+	http.SetCookie(w, &cookie)
+	response.ShowResponse(
+		"Success",
+		200,
+		"Cookies saved successfully",
+		&cookie,
+		w,
+	)
+}
+
+//Delete cookie handler
+func DeleteCookie(w http.ResponseWriter, r *http.Request, cookie *http.Cookie) {
+	c := http.Cookie{
+		Name:    "cookie",
+		Expires: time.Now(),
+	}
+	http.SetCookie(w, &c)
+	response.ShowResponse(
+		"Success",
+		200,
+		"Cookies Deleted successfully",
+		&cookie,
+		w,
+	)
 }

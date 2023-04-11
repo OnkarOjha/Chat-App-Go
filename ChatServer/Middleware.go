@@ -14,7 +14,8 @@ import (
 // Middleware for token verification
 func TokenCheck(next func(socketio.Conn) error) func(socketio.Conn) error {
 	return func(conn socketio.Conn) error {
-		// get token from header
+		//TODO get token from header
+		
 		httpheader := conn.RemoteHeader()
 		fmt.Println("httpheader: ", httpheader["Token"][0])
 

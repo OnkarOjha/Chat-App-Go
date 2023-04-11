@@ -6,7 +6,9 @@ require (
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/googollee/go-socket.io v1.7.0
+	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.5.1
+	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.8.12
 	gorm.io/driver/postgres v1.5.0
 	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
@@ -28,6 +30,8 @@ require (
 	github.com/leodido/go-urn v1.2.2 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
+	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
