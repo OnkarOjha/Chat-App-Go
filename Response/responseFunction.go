@@ -32,7 +32,4 @@ func SocketResponse(data interface{}, message string, s socketio.Conn) {
 	s.Emit("reply", socketResponse, func() {
 		fmt.Println("acknowledgement sent to client")
 	})
-
 }
-
-

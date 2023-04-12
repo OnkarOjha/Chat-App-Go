@@ -73,3 +73,9 @@ type Claims struct {
 	Phone   string `json:"phone"`
 	jwt.RegisteredClaims
 }
+
+//broadcast response
+type BroadcastResponse struct {
+	MessageBy string `json:"messageBy"`
+	MessageIn string `json:"messsageIn"`
+}

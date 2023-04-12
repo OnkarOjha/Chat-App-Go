@@ -63,12 +63,25 @@ func Messages(s socketio.Conn, data map[string]interface{}) {
 	// set the message text
 	message.Text = text
 	fmt.Println("message content is: ", message.Text)
+
+	// Broadcast "typing" event to other users in the room
+	typingResponse := models.BroadcastResponse{
+		MessageBy: message.User_id,
+		MessageIn: message.Room_id,
+	}
+	server.Server.BroadcastToRoom("/", roomId, "typing" ,typingResponse)
+	
 	
 
 	broadcast := server.Server.BroadcastToRoom("/",roomId , "reply" , text)
 	if broadcast{
 		fmt.Println("message  broadcasted: ",text)
 	}
+
+	// // // Emit "stop typing" event when user stops typing
+	// // s.Emit("stoptyping", "Message by"+ message.User_id , "Message in" + message.Room_id)
+	// server.Server.BroadcastToRoom("/", roomId, "stoptyping", message.User_id)
+
 	
 	db.DB.Create(&message)
 
