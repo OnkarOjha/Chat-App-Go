@@ -4,9 +4,10 @@ import (
 	"fmt"
 	db "main/Database"
 	model "main/Models"
+	commonFunctions "main/Utils"
 	"net/url"
 	"os"
-	commonFunctions "main/Utils"
+
 	"github.com/golang-jwt/jwt/v4"
 	socketio "github.com/googollee/go-socket.io"
 )
@@ -15,7 +16,7 @@ import (
 func TokenCheck(next func(socketio.Conn) error) func(socketio.Conn) error {
 	return func(conn socketio.Conn) error {
 		//TODO get token from header
-		
+
 		httpheader := conn.RemoteHeader()
 		fmt.Println("httpheader: ", httpheader["Token"][0])
 
@@ -23,7 +24,7 @@ func TokenCheck(next func(socketio.Conn) error) func(socketio.Conn) error {
 		rawQuery := conn.URL().RawQuery
 		query, _ := url.ParseQuery(rawQuery)
 
-		if commonFunctions.BlacklistTokenHandler(httpheader["Token"][0]){
+		if commonFunctions.BlacklistTokenHandler(httpheader["Token"][0]) {
 			fmt.Println("token is blacklisted")
 			conn.Close()
 		}
@@ -39,7 +40,7 @@ func TokenCheck(next func(socketio.Conn) error) func(socketio.Conn) error {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println("dkjsnd: ",parsedToken)
+		fmt.Println("dkjsnd: ", parsedToken)
 		var user model.User
 		if claims, ok := parsedToken.Claims.(*model.Claims); ok && parsedToken.Valid {
 			fmt.Println("claims user_id: ", claims)
@@ -51,7 +52,6 @@ func TokenCheck(next func(socketio.Conn) error) func(socketio.Conn) error {
 			if claims.User_id != user.User_Id {
 				conn.Close()
 			}
-
 			return next(conn)
 
 		}
