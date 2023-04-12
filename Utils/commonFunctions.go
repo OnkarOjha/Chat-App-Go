@@ -12,20 +12,24 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+//Blacklist a token on cookie expiration , logout and delete handlers
 func BlacklistTokenHandler(token string) bool {
 	var blacklisted bool
 	db.DB.Raw("SELECT EXISTS(SELECT * FROM blacklisted_tokens where token=?)", token).Scan(&blacklisted)
 	return blacklisted
 }
 
+// Function to enable CORS
 func EnableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
+// Function to Allow all headers
 func SetHeader(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 }
 
+//Generate Token Function
 func GenerateJwtToken(user models.User, phone string, w http.ResponseWriter) string {
 	//create user claims
 	claims := models.Claims{
@@ -49,6 +53,7 @@ func GenerateJwtToken(user models.User, phone string, w http.ResponseWriter) str
 	return tokenString
 }
 
+//Decode Token Function
 func DecodeToken(tokenString string) (models.Claims, error) {
 	claims := &models.Claims{}
 
@@ -72,6 +77,7 @@ func SetCookie(w http.ResponseWriter, r *http.Request, tokenString string) {
 		Name:    "cookie",
 		Value:   tokenString,
 		Expires: CookieExpirationTime,
+		HttpOnly: true,
 	}
 	http.SetCookie(w, &cookie)
 	response.ShowResponse(

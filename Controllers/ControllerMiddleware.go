@@ -25,7 +25,7 @@ func IsAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 		if err!=nil{
 			response.ShowResponse(
 				"Failure",
-				403,
+				400,
 				"Error fetching cookie",
 				err.Error(),
 				w,

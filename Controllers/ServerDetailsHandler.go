@@ -10,7 +10,17 @@ import (
 	commonFunctions "main/Utils"
 )
 
-// Give me RoomId , i will give you how many users are there in the room
+//	@Summary		Participant Details 
+//	@Description	Information about room which user is present in which room and the user had left the room or not
+//	@Tags			Chat-Room API
+//	@Accept			json
+//	@Produce		json
+//  @Param          User body string true "roomId of the user" SchemaExample({"roomId":"string"})
+//  @Success        200 {object}    response.Response
+//	@Failure		404	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/participants [post]
 func ParticipantDetails(w http.ResponseWriter, r *http.Request) {
 	commonFunctions.SetHeader(w)
 	commonFunctions.EnableCors(&w)
@@ -55,7 +65,17 @@ func ParticipantDetails(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-// specifically room details dega ki admin kaun hai and user_count kya hai
+//	@Summary		Room Details 
+//	@Description	Information about room (User Count , Deleted or not , Admin Id etc)
+//	@Tags			Chat-Room API
+//	@Accept			json
+//	@Produce		json
+//  @Param          User body string true "roomId of the user" SchemaExample({"roomId":"string"})
+//  @Success        200 {object}    response.Response
+//	@Failure		404	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/rooms [post]
 func RoomDetails(w http.ResponseWriter, r *http.Request){
 	commonFunctions.SetHeader(w)
 	commonFunctions.EnableCors(&w)
@@ -122,7 +142,17 @@ func RoomDetails(w http.ResponseWriter, r *http.Request){
 	)
 }
 
-//fetch all the message from DB with limit
+//	@Summary		Message Details 
+//	@Description	Information about All the messages sent in the room
+//	@Tags			Chat-Room API
+//	@Accept			json
+//	@Produce		json
+//  @Param          User body string true "roomId of the user" SchemaExample({"roomId":"string"})
+//  @Success        200 {object}    response.Response
+//	@Failure		404	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/messages [post]
 func MessageDetails(w http.ResponseWriter , r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	commonFunctions.EnableCors(&w)
@@ -176,7 +206,17 @@ func MessageDetails(w http.ResponseWriter , r *http.Request){
 	)
 }
 
-//Handler to fetch all the details of the user provided that in which room it is present
+//	@Summary		User Rooms 
+//	@Description	Information about user room access
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//  @Param          User body string true "userId of the user" SchemaExample({"userId":"string"})
+//  @Success        200 {object}    response.Response
+//	@Failure		404	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/userRoomInfo [post]
 func UserRoomsDetails(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	commonFunctions.EnableCors(&w)

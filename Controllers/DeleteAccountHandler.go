@@ -10,6 +10,17 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
+//	@Summary		User Delete Handler
+//	@Description	Deleting user Account Details
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//  @Param          User body string true "userId of the user" SchemaExample({"userId":"string"})
+//	@Success		200	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		409	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/deleteAccount [post]
 func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Delete account Handler")
 	dataFromContext := r.Context().Value("editUser")
