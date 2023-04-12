@@ -13,6 +13,7 @@ import (
 
 // Socket Instance Connection
 func Connect(s socketio.Conn) error {
+
 	rawQuery := s.URL().RawQuery
 	
 	query, _ := url.ParseQuery(rawQuery)
