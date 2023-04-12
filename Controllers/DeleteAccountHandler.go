@@ -7,13 +7,31 @@ import (
 	response "main/Response"
 	commonFunctions "main/Utils"
 	"net/http"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Delete account Handler")
 	dataFromContext := r.Context().Value("editUser")
 	userDetails := dataFromContext.(map[string]interface{})
-	fmt.Printf("user_id from context: %v\n", userDetails["userId"])
+
+
+	err := validation.Validate(userDetails,
+		validation.Map(
+			validation.Key("userId", validation.Required),
+		),
+	)
+	if err != nil {
+		response.ShowResponse(
+			"Failure",
+			400,
+			"",
+			err.Error(),
+			w,
+		)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	commonFunctions.EnableCors(&w)
 
@@ -28,7 +46,7 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	fmt.Println("You are Logging out user :", userDetails["userId"])
+
 
 	// Token expiration
 	var user models.User
@@ -68,7 +86,6 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		//delete cookie when user logout
 		commonFunctions.DeleteCookie(w,r,cookie)
 		
-		fmt.Println("user now:", user)
 		response.ShowResponse(
 			"Success",
 			200,

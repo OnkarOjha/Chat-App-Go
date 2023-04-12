@@ -12,7 +12,8 @@ import (
 	"os"
 	"time"
 	commonFunctions "main/Utils"
-	
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/verify/v2"
 )
@@ -280,8 +281,16 @@ func UserEditHandler(w http.ResponseWriter, r *http.Request) {
 
 	var edituser models.User
 	
-
-	err := validator.CheckValidationStruct(userEditDetails)
+	fmt.Println("user edit details...",userEditDetails)
+	err := validation.Validate(userEditDetails,
+		validation.Map(
+			validation.Key("userId", validation.Required),
+			validation.Key("name", validation.Required),
+			validation.Key("email", validation.Required , is.Email),
+			validation.Key("bio", validation.Required),
+			validation.Key("profilePicture", validation.Required),
+		),
+	)
 	if err != nil {
 		response.ShowResponse(
 			"Failure",
