@@ -13,8 +13,8 @@ import (
 
 // Socket Instance Connection
 func Connect(s socketio.Conn) error {
-
 	rawQuery := s.URL().RawQuery
+	
 	query, _ := url.ParseQuery(rawQuery)
 	fmt.Printf("Client %s Connected \n", query["id"][0])
 	return nil

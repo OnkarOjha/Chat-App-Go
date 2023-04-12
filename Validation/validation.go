@@ -18,9 +18,8 @@ func CheckValidation(data interface{}) error {
 }
 
 func CheckValidationStruct(data interface{}) error {
-	fmt.Println("dadtaaskh: ", data)
-
-	validationErr := Validate.Var(data,"required")
+	fmt.Println("incoming data:", data)
+	validationErr := Validate.Var(data , "required")
 	if validationErr != nil {
 		return validationErr
 	}
