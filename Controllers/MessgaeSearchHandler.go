@@ -11,7 +11,17 @@ import (
 	"net/http"
 )
 
-// Message Searching API
+//	@Summary		Message Searching for Rooms
+//	@Description	All the message matching the message text
+//	@Tags			Chat-Room API
+//	@Accept			json
+//	@Produce		json
+//  @Param          User body string true "userId of the user" SchemaExample({"roomId":"string" , "search" : "string"})
+//  @Success        200 {object}    response.Response
+//	@Failure		404	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/messageSearch [post]
 func MessageSearchController(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")

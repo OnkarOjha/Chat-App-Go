@@ -2,7 +2,7 @@ package Utils
 
 import (
 	"time"
-
+	"github.com/gorilla/mux"
 	socketio "github.com/googollee/go-socket.io"
 )
 
@@ -11,6 +11,9 @@ const VERIFY_SERVICE_SID string = "VA6602f8535f8f1369b0ed68eed5d6af67"
 
 // server instance
 var Server = socketio.NewServer(nil)
+
+// mux instance
+var Mux = mux.NewRouter()
 
 // token timing
 var TokenExpirationDuration = time.Now().Add(7 * 24 * time.Hour)

@@ -1,8 +1,426 @@
+definitions:
+  Response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
+    type: object
 host: localhost:8000
 info:
   contact: {}
   description: API Documentation for Chat-Application
   title: Chat-Application
   version: 1.0.0
-paths: {}
+paths:
+  /deleteAccount:
+    post:
+      consumes:
+      - application/json
+      description: Deleting user Account Details
+      parameters:
+      - description: userId of the user
+        in: body
+        name: User
+        required: true
+        schema:
+          example: '{"userId":"string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: User Delete Handler
+      tags:
+      - user
+  /editUser:
+    put:
+      consumes:
+      - application/json
+      description: User can Signup with his personal information
+      parameters:
+      - description: User Information
+        in: body
+        name: User
+        required: true
+        schema:
+          example: '{"userId" : "string" , "name" : "string" , "email" : "string"
+            , "bio" : "string" , "profilePicture" : "string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: User Signup Handler
+      tags:
+      - user
+  /getUser:
+    get:
+      consumes:
+      - application/json
+      description: User Infromation
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: User Information
+      tags:
+      - user
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: Logging user out
+      parameters:
+      - description: userId of the user
+        in: body
+        name: User
+        required: true
+        schema:
+          example: '{"userId":"string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: User logout Handler
+      tags:
+      - user
+  /messageSearch:
+    post:
+      consumes:
+      - application/json
+      description: All the message matching the message text
+      parameters:
+      - description: userId of the user
+        in: body
+        name: User
+        required: true
+        schema:
+          example: '{"roomId":"string" , "search" : "string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Message Searching for Rooms
+      tags:
+      - Chat-Room API
+  /messages:
+    post:
+      consumes:
+      - application/json
+      description: Information about All the messages sent in the room
+      parameters:
+      - description: roomId of the user
+        in: body
+        name: User
+        required: true
+        schema:
+          example: '{"roomId":"string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Message Details
+      tags:
+      - Chat-Room API
+  /participants:
+    post:
+      consumes:
+      - application/json
+      description: Information about room which user is present in which room and
+        the user had left the room or not
+      parameters:
+      - description: roomId of the user
+        in: body
+        name: User
+        required: true
+        schema:
+          example: '{"roomId":"string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Participant Details
+      tags:
+      - Chat-Room API
+  /roomDelete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete the room only by  the user who is the admin of that room
+      parameters:
+      - description: roomId of the user
+        in: body
+        name: User
+        required: true
+        schema:
+          example: '{"roomId":"string" ,"adminid" : "string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Room Delete API
+      tags:
+      - Chat-Room API
+  /rooms:
+    post:
+      consumes:
+      - application/json
+      description: Information about room (User Count , Deleted or not , Admin Id
+        etc)
+      parameters:
+      - description: roomId of the user
+        in: body
+        name: User
+        required: true
+        schema:
+          example: '{"roomId":"string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Room Details
+      tags:
+      - Chat-Room API
+  /sendOtp:
+    post:
+      consumes:
+      - application/json
+      description: Sending OTP
+      parameters:
+      - description: phone number of the user
+        in: body
+        name: phone
+        required: true
+        schema:
+          example: '{"phone":"string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Send OTP handler
+      tags:
+      - user
+  /userRoomInfo:
+    post:
+      consumes:
+      - application/json
+      description: Information about user room access
+      parameters:
+      - description: userId of the user
+        in: body
+        name: User
+        required: true
+        schema:
+          example: '{"userId":"string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: User Rooms
+      tags:
+      - user
+  /verifyOtp:
+    post:
+      consumes:
+      - application/json
+      description: Verifying OTP
+      parameters:
+      - description: phone number & OTP of the user
+        in: body
+        name: phone
+        required: true
+        schema:
+          example: '{"phone":"string" , "otp" : "string"}'
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Verify OTP handler
+      tags:
+      - user
 swagger: "2.0"

@@ -6,12 +6,13 @@ import (
 	db "main/Database"
 	models "main/Models"
 	response "main/Response"
+	commonFunctions "main/Utils"
 	constants "main/Utils"
 	validator "main/Validation"
 	"net/http"
 	"os"
 	"time"
-	commonFunctions "main/Utils"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/twilio/twilio-go"
@@ -20,16 +21,25 @@ import (
 
 var TwilioClient *twilio.RestClient
 
-func TwilioInit(password string)  {
+func TwilioInit(password string) {
 	TwilioClient = twilio.NewRestClientWithParams(twilio.ClientParams{
-		Username:constants.TWILIO_ACCOUNT_SID,
+		Username: constants.TWILIO_ACCOUNT_SID,
 		Password: password,
 	})
 
-
 }
 
-// send OTP to user
+//	@Summary		Send OTP handler
+//	@Description	Sending OTP
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//  @Param          phone body string true "phone number of the user" SchemaExample({"phone":"string"})
+//	@Success		200	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		409	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/sendOtp [post]
 func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 	commonFunctions.SetHeader(w)
 	commonFunctions.EnableCors(&w)
@@ -127,7 +137,18 @@ func sendOtp(to string, w http.ResponseWriter) (bool, *string) {
 
 }
 
-// Check OTP status
+//	@Summary		Verify OTP handler
+//	@Description	Verifying OTP
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//  @Param          phone body string true "phone number & OTP of the user" SchemaExample({"phone":"string" , "otp" : "string"})
+//  @Success        200 {object}    response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		409	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/verifyOtp [post]
 func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	commonFunctions.SetHeader(w)
 	commonFunctions.EnableCors(&w)
@@ -213,21 +234,20 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) mod
 	db.DB.Raw("SELECT EXISTS(SELECT * FROM users WHERE phone=? and is_active=false)", phone).Scan(&userexists)
 	fmt.Println("token generation time user exists or not : ", userexists)
 	if userexists {
-			
-		var user1 models.User
-		
-		db.DB.Raw("select * from users where phone=?",phone).Scan(&user1)
-		// JWT token authentication
-		TokenString := commonFunctions.GenerateJwtToken(user1,phone,w)
 
+		var user1 models.User
+
+		db.DB.Raw("select * from users where phone=?", phone).Scan(&user1)
+		// JWT token authentication
+		TokenString := commonFunctions.GenerateJwtToken(user1, phone, w)
 
 		//set cookie
-		constants.SetCookie(w,r,TokenString)
+		constants.SetCookie(w, r, TokenString)
 
 		// Updation in DB
-		db.DB.Model(&models.User{}).Where("phone=?",phone).Update("token" , TokenString)
-		db.DB.Model(&models.User{}).Where("phone=?",phone).Update("is_active" , true)
-		db.DB.Raw("select * from users where phone=?",phone).Scan(&user1)
+		db.DB.Model(&models.User{}).Where("phone=?", phone).Update("token", TokenString)
+		db.DB.Model(&models.User{}).Where("phone=?", phone).Update("is_active", true)
+		db.DB.Raw("select * from users where phone=?", phone).Scan(&user1)
 		return user1
 
 	}
@@ -241,10 +261,10 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) mod
 
 	// jwt authentication token
 
-	TokenString := commonFunctions.GenerateJwtToken(user , phone , w)
+	TokenString := commonFunctions.GenerateJwtToken(user, phone, w)
 
 	//set cookies
-	constants.SetCookie(w,r,TokenString)
+	constants.SetCookie(w, r, TokenString)
 
 	db.DB.Model(&user).Where("user_id=?", user.User_Id).Updates(&models.User{Token: TokenString})
 
@@ -252,6 +272,14 @@ func UserSignupHandler(w http.ResponseWriter, r *http.Request, phone string) mod
 
 }
 
+//	@Summary		User Information
+//	@Description	User Infromation
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//  @Success        200 {object}    response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/getUser [get]
 func UserGetterHandler(w http.ResponseWriter, r *http.Request) {
 	commonFunctions.SetHeader(w)
 	if r.Method != http.MethodGet {
@@ -262,14 +290,31 @@ func UserGetterHandler(w http.ResponseWriter, r *http.Request) {
 	var users []models.User
 	query := "SELECT * FROM users"
 	db.DB.Raw(query).Scan(&users)
-	json.NewEncoder(w).Encode(&users)
+	response.ShowResponse(
+		"Success",
+		200,
+		"All the DB users are displayed below",
+		users,
+		w,
+	)
 }
 
-// user details edit
+//	@Summary		User Signup Handler
+//	@Description	User can Signup with his personal information
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//  @Param          User body string true "User Information" SchemaExample({"userId" : "string" , "name" : "string" , "email" : "string" , "bio" : "string" , "profilePicture" : "string"})
+//  @Success        200 {object}    response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		409	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/editUser [put]
 func UserEditHandler(w http.ResponseWriter, r *http.Request) {
-	
+
 	mpData := r.Context().Value("editUser")
-	
+
 	userEditDetails := mpData.(map[string]interface{})
 	fmt.Printf("Data from context: %v\n", userEditDetails["userId"])
 	w.Header().Set("Content-Type", "application/json")
@@ -280,13 +325,13 @@ func UserEditHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("You are editing user information.....")
 
 	var edituser models.User
-	
-	fmt.Println("user edit details...",userEditDetails)
+
+	fmt.Println("user edit details...", userEditDetails)
 	err := validation.Validate(userEditDetails,
 		validation.Map(
 			validation.Key("userId", validation.Required),
 			validation.Key("name", validation.Required),
-			validation.Key("email", validation.Required , is.Email),
+			validation.Key("email", validation.Required, is.Email),
 			validation.Key("bio", validation.Required),
 			validation.Key("profilePicture", validation.Required),
 		),
@@ -303,12 +348,12 @@ func UserEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
-	db.DB.Model(&models.User{}).Where("user_id=?",userEditDetails["userId"]).Find(&user)
+	db.DB.Model(&models.User{}).Where("user_id=?", userEditDetails["userId"]).Find(&user)
 	UserBio := userEditDetails["bio"]
 	UserEmail := userEditDetails["email"]
 	UserName := userEditDetails["name"]
 	UserProfilePicture := userEditDetails["profilePicture"]
-	result := db.DB.Model(&models.User{}).Where("user_id=?", userEditDetails["userId"]).Updates(&models.User{Bio: UserBio.(string) ,Email: UserEmail.(string) , Name: UserName.(string) , Profile_picture: UserProfilePicture.(string) })
+	result := db.DB.Model(&models.User{}).Where("user_id=?", userEditDetails["userId"]).Updates(&models.User{Bio: UserBio.(string), Email: UserEmail.(string), Name: UserName.(string), Profile_picture: UserProfilePicture.(string)})
 	var showUser models.User
 	db.DB.Raw("SELECT * from users where user_id=?", userEditDetails["userId"]).Scan(&showUser)
 
@@ -342,5 +387,3 @@ func UserEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-
-

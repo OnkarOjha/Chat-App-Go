@@ -10,6 +10,17 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
+//	@Summary		User logout Handler
+//	@Description	Logging user out
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//  @Param          User body string true "userId of the user" SchemaExample({"userId":"string"})
+//	@Success		200	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		409	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/logout [post]
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("logout handler")
 	dataFromContext := r.Context().Value("editUser")
@@ -37,7 +48,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if err!=nil{
 		response.ShowResponse(
 			"Failure",
-			403,
+			400,
 			"Error fetching cookie",
 			err.Error(),
 			w,

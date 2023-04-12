@@ -5,58 +5,51 @@ import (
 	"log"
 	controller "main/Controllers"
 	db "main/Database"
-	"net/http"
-	server "main/Utils"
 	namespace "main/Server"
-	"github.com/gorilla/mux"
+	server "main/Utils"
+	_ "main/docs"
+	"net/http"
+
 	httpSwagger "github.com/swaggo/http-swagger"
-	
 )
 
 func Routes() {
 	fmt.Println("Listening on port 8000")
-	mux := mux.NewRouter()
+
 	err := db.Connect()
 	if err != nil {
 		panic(err)
 	}
 
 	//room-topic end-points
-	http.HandleFunc("/roomTopic", controller.RoomTopicController)
-	http.HandleFunc("/getroomTopic", controller.RoomTopicGetter)
+	server.Mux.HandleFunc("/roomTopic", controller.RoomTopicController)
+	server.Mux.HandleFunc("/getroomTopic", controller.RoomTopicGetter)
 
 	//user end-points
-	http.HandleFunc("/sendOtp", controller.SendOtpHandler)
-	http.HandleFunc("/verifyOtp", controller.VerifyOTPHandler)
-	http.HandleFunc("/getUser", controller.UserGetterHandler)
-	http.Handle("/editUser",controller.IsAuthorized(controller.UserEditHandler))
-	http.Handle("/logout", controller.IsAuthorized(controller.LogoutHandler))
-	http.Handle("/deleteAccount", controller.IsAuthorized(controller.DeleteAccount))
-	http.HandleFunc("/userRoomInfo", controller.UserRoomsDetails)
-
-
-
-	
+	server.Mux.HandleFunc("/sendOtp", controller.SendOtpHandler)
+	server.Mux.HandleFunc("/verifyOtp", controller.VerifyOTPHandler)
+	server.Mux.HandleFunc("/getUser", controller.UserGetterHandler)
+	server.Mux.Handle("/editUser", controller.IsAuthorized(controller.UserEditHandler))
+	server.Mux.Handle("/logout", controller.IsAuthorized(controller.LogoutHandler))
+	server.Mux.Handle("/deleteAccount", controller.IsAuthorized(controller.DeleteAccount))
+	server.Mux.HandleFunc("/userRoomInfo", controller.UserRoomsDetails)
 
 	// chat-room functions
-	http.HandleFunc("/participants",controller.ParticipantDetails)
-	http.HandleFunc("/rooms",controller.RoomDetails)
-	http.HandleFunc("/messages",controller.MessageDetails)
-	http.HandleFunc("/roomDelete",controller.RoomDelete)
-	http.HandleFunc("/messageSearch",controller.MessageSearchController)
+	server.Mux.HandleFunc("/participants", controller.ParticipantDetails)
+	server.Mux.HandleFunc("/rooms", controller.RoomDetails)
+	server.Mux.HandleFunc("/messages", controller.MessageDetails)
+	server.Mux.HandleFunc("/roomDelete", controller.RoomDelete)
+	server.Mux.HandleFunc("/messageSearch", controller.MessageSearchController)
 
-
-	mux.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
-
-
+	//swagger api
+	server.Mux.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	// to call socket-io
 	namespace.Namespaces()
 	go server.Server.Serve()
 	defer server.Server.Close()
 
-	http.HandleFunc("/", controller.HomeHandler)
+	server.Mux.HandleFunc("/", controller.HomeHandler)
 
-
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	log.Fatal(http.ListenAndServe(":8000", server.Mux))
 }

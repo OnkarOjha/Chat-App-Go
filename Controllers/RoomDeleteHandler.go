@@ -10,9 +10,20 @@ import (
 	commonFunctions "main/Utils"
 )
 
+//	@Summary		Room Delete API 
+//	@Description	Delete the room only by  the user who is the admin of that room
+//	@Tags			Chat-Room API
+//	@Accept			json
+//	@Produce		json
+//  @Param          User body string true "roomId of the user" SchemaExample({"roomId":"string" ,"adminid" : "string"})
+//  @Success        200 {object}    response.Response
+//	@Failure		404	{string}	response.Response
+//	@Failure		400	{string}	response.Response
+//	@Failure		500	{string}	response.Response
+//	@Router			/roomDelete [delete]
 func RoomDelete(w http.ResponseWriter, r *http.Request) {
 	// only that person who is the admin can delete the room
-	// var room models.Room
+	
 	w.Header().Set("Content-Type", "application/json")
 	commonFunctions.EnableCors(&w)
 	fmt.Println("We are deleting the room")
@@ -39,8 +50,6 @@ func RoomDelete(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	fmt.Println("room_id: ", roomId)
-	fmt.Println("admin_id: ", adminId)
 
 	// check if room exists or not
 	 var roomexists bool
