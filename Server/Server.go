@@ -13,7 +13,7 @@ func Namespaces() {
 	server.Server.OnEvent("/", "join", chat.RoomJoin)
 	server.Server.OnEvent("/", "message", chat.Messages)
 	server.Server.OnEvent("/", "leave", chat.RoomLeave)
-
+	
 	//socket server
 	server.Mux.Handle("/socket.io/", server.Server)
 

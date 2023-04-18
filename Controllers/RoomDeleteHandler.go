@@ -84,5 +84,15 @@ func RoomDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}else{
 		db.DB.Where("room_id=?", roomId).Updates(&models.Room{Is_deleted: true})
+		var room models.Room
+		db.DB.Raw("select * from rooms where room_id=?",roomId).Scan(&room)
+		response.ShowResponse(
+			"Success",
+			200,
+			"Room deleted successfully",
+			room,
+			w,
+		)
+		return
 	}
 }

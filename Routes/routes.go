@@ -44,6 +44,9 @@ func Routes() {
 	//swagger api
 	server.Mux.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
+	//fileUpload
+	server.Mux.HandleFunc("/upload", controller.FileUpload)
+
 	// to call socket-io
 	namespace.Namespaces()
 	go server.Server.Serve()
