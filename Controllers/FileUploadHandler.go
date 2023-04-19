@@ -10,6 +10,7 @@ import (
 	"time"
 	db "main/Database"
 	models "main/Models"
+	constant "main/Utils"
 )
 
 func FileUpload(w http.ResponseWriter, r *http.Request) {
@@ -24,9 +25,24 @@ func FileUpload(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	defer file.Close()
 
-	//TODO file upload restriction  on type
+	//file size check
+	r.Body = http.MaxBytesReader(w, r.Body, constant.MAX_UPLOADED_SIZE)
+	if err := r.ParseMultipartForm(constant.MAX_UPLOADED_SIZE); err != nil {
+		response.ShowResponse(
+			"Failure",
+			400,
+			"File size must not be greater than 40mb",
+			err.Error(),
+			w,
+		)
+		return
+	}
+
+	defer file.Close()
+	
+	fmt.Println("file: ", fileHeader)
+	
 	buff := make([]byte, 512)
 	_, err = file.Read(buff)
 	if err != nil {
@@ -41,7 +57,8 @@ func FileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filetype := http.DetectContentType(buff)
-	if filetype != "image/jpeg" && filetype != "image/png" && filetype != "image/gif" && filetype != "application/pdf" && filetype != "application/msword" && filetype != "application/vnd.openxmlformats-officedocument.wordprocessingml.document"{ 
+	fmt.Println("filetype: ", filetype)
+	if filetype != "image/jpeg" && filetype != "image/png" && filetype != "image/gif" && filetype != "application/pdf" && filetype != "application/msword" && filetype != "application/zip" && filetype != "application/octet-stream" && filetype != "video/mp4" && filetype != "audio/mpeg" && filetype != "audio/wave" && filetype != "application/ogg" {
 		response.ShowResponse(
 			"Failure",
 			400,
@@ -51,7 +68,7 @@ func FileUpload(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-
+	
 	_, err = file.Seek(0, io.SeekStart)
 	if err != nil {
 		response.ShowResponse(
@@ -168,13 +185,15 @@ func FileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//TODO file size limitation
 	
 	var message models.Message
-	message.Message_type = filetype
+	
 	message.Room_id = roomId
 	message.User_id = userId
 	message.Text = fileHeader.Filename
-
+	messageType := MessageTypeSet(filetype)
+	message.Message_type = messageType
 	db.DB.Create(&message)
 
 	response.ShowResponse(
@@ -184,4 +203,27 @@ func FileUpload(w http.ResponseWriter, r *http.Request) {
 		message,
 		w,
 	)
+}
+
+func MessageTypeSet(filetype string)string{
+	var messageType string
+
+	if filetype == "application/pdf" || filetype == "application/msword" || filetype == "application/zip" || filetype == "application/octet-stream"{
+		messageType = "Document"
+	}
+
+	if filetype == "image/jpeg" || filetype == "image/png" || filetype == "image/gif"{
+		messageType = "Image"
+	}
+
+	if filetype == "video/mp4"{
+		messageType = "Video"
+	}
+
+	if filetype == "audio/mpeg" || filetype == "audio/wave" || filetype == "application/ogg"{
+		messageType = "Audio"
+	}
+
+
+	return messageType
 }

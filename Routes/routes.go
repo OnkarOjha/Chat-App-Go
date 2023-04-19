@@ -52,7 +52,10 @@ func Routes() {
 	go server.Server.Serve()
 	defer server.Server.Close()
 
-	server.Mux.HandleFunc("/", controller.HomeHandler)
+	// Serve files from a directory
+	fs := http.FileServer(http.Dir("/home/chicmic/Desktop/Chat-App-Go/File/uploads"))
+	server.Mux.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", fs))
+
 
 	log.Fatal(http.ListenAndServe(":8000", server.Mux))
 }

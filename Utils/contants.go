@@ -21,3 +21,5 @@ var TokenExpirationDuration = time.Now().Add(7 * 24 * time.Hour)
 var TokenCheckTimer = 2 * time.Minute
 var CookieExpirationTime = time.Now().Add(7 * 24 * time.Hour)
 
+const MAX_UPLOADED_SIZE = 40 * 1024 * 1024 // 40mb
+
