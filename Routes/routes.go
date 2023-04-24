@@ -21,6 +21,9 @@ func Routes() {
 		panic(err)
 	}
 
+	// cors middleware
+	server.Mux.Use(controller.CORSMiddleware)
+
 	//room-topic end-points
 	server.Mux.HandleFunc("/roomTopic", controller.RoomTopicController)
 	server.Mux.HandleFunc("/getroomTopic", controller.RoomTopicGetter)
