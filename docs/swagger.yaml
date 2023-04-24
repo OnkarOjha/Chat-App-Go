@@ -9,7 +9,7 @@ definitions:
       status:
         type: string
     type: object
-host: localhost:8000
+host: localhost:3000
 info:
   contact: {}
   description: API Documentation for Chat-Application
