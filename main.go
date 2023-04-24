@@ -12,7 +12,7 @@ import (
 // @title Chat-Application
 // @version 1.0.0
 // @description API Documentation for Chat-Application
-// @host localhost:3000
+// @host 13.233.130.222:3000
 func main() {
 	fmt.Println("Chat Application Backend")
 	envErr := godotenv.Load(".env")
