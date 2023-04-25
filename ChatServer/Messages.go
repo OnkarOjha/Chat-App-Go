@@ -4,10 +4,11 @@ import (
 	"fmt"
 	db "main/Database"
 	models "main/Models"
-	"net/url"
-	socketio "github.com/googollee/go-socket.io"
-	server "main/Utils"
 	response "main/Response"
+	server "main/Utils"
+	"net/url"
+
+	socketio "github.com/googollee/go-socket.io"
 )
 
 //Message sending Handler
@@ -33,10 +34,10 @@ func Messages(s socketio.Conn, data map[string]interface{}) {
 		)
 		return
 	}
-	
+
 	response.SocketResponse(
 		text,
-		"Message sent in room" + roomId,
+		"Message sent in room"+roomId,
 		s,
 	)
 
@@ -49,7 +50,7 @@ func Messages(s socketio.Conn, data map[string]interface{}) {
 	// search for the room
 	var room models.Room
 	err := db.DB.Where("room_id=?", roomId).First(&room).Error
-	if err!=nil{
+	if err != nil {
 		response.SocketResponse(
 			"Failure",
 			err.Error(),
@@ -61,6 +62,7 @@ func Messages(s socketio.Conn, data map[string]interface{}) {
 	fmt.Println("message in room with id: ", message.Room_id)
 
 	// set the message text
+	message.Message_type = "Text Message"
 	message.Text = text
 	fmt.Println("message content is: ", message.Text)
 
@@ -69,21 +71,16 @@ func Messages(s socketio.Conn, data map[string]interface{}) {
 		MessageBy: message.User_id,
 		MessageIn: message.Room_id,
 	}
-	server.Server.BroadcastToRoom("/", roomId, "typing" ,typingResponse)
-	
-	
-
-	broadcast := server.Server.BroadcastToRoom("/",roomId , "reply" , text)
-	if broadcast{
-		fmt.Println("message  broadcasted: ",text)
+	server.Server.BroadcastToRoom("/", roomId, "typing", typingResponse)
+	broadcast := server.Server.BroadcastToRoom("/", roomId, "reply", text)
+	if broadcast {
+		fmt.Println("message  broadcasted: ", text)
 	}
 
 	// // // Emit "stop typing" event when user stops typing
 	// // s.Emit("stoptyping", "Message by"+ message.User_id , "Message in" + message.Room_id)
 	// server.Server.BroadcastToRoom("/", roomId, "stoptyping", message.User_id)
 
-	
 	db.DB.Create(&message)
 
 }
-

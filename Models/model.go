@@ -4,7 +4,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	// socketio "github.com/googollee/go-socket.io"
 	"github.com/jinzhu/gorm"
-	
 )
 
 // User Information
@@ -38,7 +37,7 @@ type Room struct {
 	Created_at string `json:"createdAt"`
 	Topic_id   string `json:"topicId"` //  hatana pdega
 	Topic_name string `json:"topicName" validate:"required"`
-	User_count int64    `json:"userCount"`
+	User_count int64  `json:"userCount"`
 	Is_deleted bool   `json:"isDeleted"`
 }
 
@@ -55,11 +54,11 @@ type Message struct {
 // Participant Information
 type Participant struct {
 	gorm.Model
-	P_Id       string `json:"id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
-	User_id    string `json:"userId"`
-	Room_id    string `json:"roomId"`
-	Room_name  string `json:"roomName"`
-	Has_left bool   `json:"hasLeft"`
+	P_Id      string `json:"id" gorm:"default:uuid_generate_v4();unique;primaryKey"` //PK
+	User_id   string `json:"userId"`
+	Room_id   string `json:"roomId"`
+	Room_name string `json:"roomName"`
+	Has_left  bool   `json:"hasLeft"`
 }
 
 // Blacklisted Tokens

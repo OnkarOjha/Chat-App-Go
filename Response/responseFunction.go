@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
+	// server "main/Utils"
 	socketio "github.com/googollee/go-socket.io"
 )
 
@@ -29,7 +29,8 @@ func SocketResponse(data interface{}, message string, s socketio.Conn) {
 		Message: message,
 		Data:    data,
 	}
-	s.Emit("reply", socketResponse, func() {
+	
+	s.Emit("ack", socketResponse, func() {
 		fmt.Println("acknowledgement sent to client")
 	})
 }

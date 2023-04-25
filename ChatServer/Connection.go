@@ -15,9 +15,10 @@ import (
 func Connect(s socketio.Conn) error {
 
 	rawQuery := s.URL().RawQuery
-	
+
 	query, _ := url.ParseQuery(rawQuery)
 	fmt.Printf("Client %s Connected \n", query["id"][0])
+
 	return nil
 }
 
@@ -64,7 +65,7 @@ func RoomJoin(s socketio.Conn, data map[string]interface{}) {
 	var room models.Room
 
 	s.Join(roomId)
-
+	
 	response.SocketResponse(
 		roomId,
 		"User Successfully joined Room "+roomId,
@@ -114,7 +115,6 @@ func Paricipants(user_id string, roomId string, s socketio.Conn) {
 	// if exists is false then create new participant
 	participants.User_id = user_id
 	participants.Room_id = roomId
-	// participants.Room_name = RoomName
 	db.DB.Create(&participants)
 
 }
