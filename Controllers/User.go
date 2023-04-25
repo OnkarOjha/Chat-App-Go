@@ -78,7 +78,7 @@ func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
+	fmt.Println("dgns")
 	// Check if number already exists for new user sigining in
 	var numberExists bool
 	err = db.DB.Raw("SELECT EXISTS(SELECT 1 FROM users WHERE phone=? and is_active=true)", mp["phone"]).Scan(&numberExists).Error

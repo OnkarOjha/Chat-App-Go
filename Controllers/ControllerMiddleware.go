@@ -207,7 +207,7 @@ func CORSMiddleware(originalHandler http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Co")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT , DELETE")
 
 		if r.Method == "OPTIONS" {
 			return
